@@ -1,407 +1,504 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: http:;">
-    <title>AI 閱讀手札與全攻略系統</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@400;600&family=Zhi+Mang+Xing&display=swap');
-        .font-sans-tc { font-family: 'Noto Sans TC', sans-serif; }
-        .font-serif-tc { font-family: 'Noto Serif TC', serif; }
-        .font-handwriting { font-family: 'Zhi Mang Xing', cursive; }
-    </style>
-</head>
-<body id="appBody" class="font-sans-tc bg-amber-50/50 text-slate-800 min-h-screen flex flex-col transition-all duration-300">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- 【防禦 1】CSP 內容安全政策：阻擋未經授權的外部腳本注入 -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: http:;">
+  <title>AI 閱讀手札與全攻略系統｜安全強化版</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@400;600;700&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
 
-    <!-- 頂部導覽列 -->
-    <header class="bg-white/80 backdrop-blur-md border-b border-amber-100 sticky top-0 z-50 px-6 py-3 flex justify-between items-center shadow-sm">
-        <div class="flex items-center space-x-3">
-            <span id="navBadge" class="text-2xl">☕</span>
-            <h1 class="text-lg font-bold bg-gradient-to-r from-amber-700 to-orange-600 bg-clip-text text-transparent">AI 閱讀手札</h1>
-            <span id="currentViewTitle" class="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-full font-medium">個人書房</span>
+  <style>
+    :root {
+      --bg-base: #FAF7F2;
+      --bg-card: #FFFFFF;
+      --text-main: #2D2A26;
+      --text-muted: #6E685F;
+      --border-color: #E8E1D5;
+      --accent-color: #D97757;
+      --accent-soft: rgba(217, 119, 87, 0.13);
+      --font-family: 'Noto Sans TC', sans-serif;
+      --base-font-size: 16px;
+    }
+
+    [data-theme="cream"] { --bg-base: #FAF7F2; --bg-card: #FFFFFF; --text-main: #2D2A26; --text-muted: #6E685F; --border-color: #E8E1D5; }
+    [data-theme="matcha"] { --bg-base: #F2F6F1; --bg-card: #FFFFFF; --text-main: #233025; --text-muted: #5A6B5D; --border-color: #DCE5DA; }
+    [data-theme="morandi"] { --bg-base: #F0F3F6; --bg-card: #FFFFFF; --text-main: #262E38; --text-muted: #5D6978; --border-color: #DCE2E9; }
+    [data-theme="dark"] { --bg-base: #16161A; --bg-card: #222228; --text-main: #F4F4F6; --text-muted: #A1A1AA; --border-color: #32323B; }
+
+    .texture-plain { background-image: none; }
+    .texture-paper { background-image: radial-gradient(rgba(160, 140, 110, 0.09) 1px, transparent 0); background-size: 16px 16px; }
+    .texture-dots { background-image: radial-gradient(var(--border-color) 1.5px, transparent 1.5px); background-size: 20px 20px; }
+    .texture-grid { background-size: 24px 24px; background-image: linear-gradient(to right, var(--border-color) 1px, transparent 1px), linear-gradient(to bottom, var(--border-color) 1px, transparent 1px); }
+
+    .wallpaper-minimal { background: transparent; }
+    .wallpaper-coffee { background-color: #F5EBE0; background-image: radial-gradient(circle at 18% 22%, rgba(213, 189, 175, 0.45) 0%, transparent 45%), radial-gradient(circle at 82% 75%, rgba(227, 213, 202, 0.55) 0%, transparent 50%); }
+    .wallpaper-forest { background-color: #E9F0EA; background-image: radial-gradient(circle at 85% 15%, rgba(163, 193, 173, 0.45) 0%, transparent 45%); }
+    .wallpaper-starry { background-color: #1E2235; background-image: radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.25) 0%, transparent 45%); }
+
+    body { background-color: var(--bg-base); color: var(--text-main); font-family: var(--font-family); font-size: var(--base-font-size); transition: background-color 0.3s ease, color 0.3s ease; }
+    .card-surface { background-color: var(--bg-card); border-color: var(--border-color); }
+    .glass-card { background-color: rgba(255, 255, 255, 0.84); backdrop-filter: blur(12px); border-color: rgba(232, 225, 213, 0.8); }
+    [data-theme="dark"] .glass-card { background-color: rgba(34, 34, 40, 0.84); border-color: rgba(60, 60, 70, 0.8); }
+    .text-muted-custom { color: var(--text-muted); }
+    .border-custom { border-color: var(--border-color); }
+    .accent-bg { background-color: var(--accent-color); color: #FFFFFF; }
+    .accent-bg-soft { background-color: var(--accent-soft); color: var(--accent-color); }
+    .accent-text { color: var(--accent-color); }
+    .accent-border { border-color: var(--accent-color); }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: rgba(150, 150, 150, 0.3); border-radius: 9999px; }
+  </style>
+</head>
+<body class="min-h-screen texture-paper pb-20 relative">
+
+  <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none no-print"></div>
+
+  <!-- 視圖 A：我的書房 -->
+  <div id="view-library" class="min-h-screen relative transition-all duration-500">
+    <div id="library-wallpaper-bg" class="fixed inset-0 z-0 pointer-events-none bg-cover bg-center wallpaper-coffee"></div>
+    <div id="library-wallpaper-overlay" class="fixed inset-0 z-0 pointer-events-none" style="background-color: rgba(250, 247, 242, 0.35);"></div>
+
+    <div class="relative z-10 max-w-5xl mx-auto px-4 pt-6 space-y-8">
+      <header class="glass-card border rounded-3xl p-5 md:p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+          <div class="w-14 h-14 rounded-2xl accent-bg flex items-center justify-center text-2xl shadow-md shrink-0">🏡</div>
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <h1 class="font-bold text-xl md:text-2xl tracking-tight">我的專屬閱讀書房</h1>
+              <span id="library-stats-pill" class="text-xs font-medium px-2.5 py-0.5 rounded-full accent-bg-soft">防護中</span>
+            </div>
+            <p class="text-xs md:text-sm text-muted-custom mt-1">🛡️ 已啟用 XSS 過濾、URL 白名單與安全防護機制</p>
+          </div>
         </div>
-        <div class="flex items-center space-x-3">
-            <button onclick="toggleBackupModal()" class="text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1.5 rounded-lg flex items-center space-x-1 hover:bg-emerald-100 transition">
-                <span>📦 備份與還原</span>
-            </button>
-            <button onclick="toggleStyleModal()" class="text-xs bg-amber-50 text-amber-800 border border-amber-200 px-3 py-1.5 rounded-lg flex items-center space-x-1 hover:bg-amber-100 transition">
-                <span>🎨 風格與字體</span>
-            </button>
+        <div class="flex items-center gap-2.5 flex-wrap shrink-0">
+          <button onclick="openWallpaperModal()" class="px-3.5 py-2.5 rounded-2xl border border-custom card-surface text-xs font-bold flex items-center gap-1.5 shadow-2xs">
+            <i data-lucide="image" class="w-4 h-4 accent-text"></i><span>更換書房桌布</span>
+          </button>
+          <button onclick="toggleStyleDrawer()" class="px-3.5 py-2.5 rounded-2xl border border-custom card-surface text-xs font-bold flex items-center gap-1.5 shadow-2xs">
+            <i data-lucide="palette" class="w-4 h-4 accent-text"></i><span>主題與字體</span>
+          </button>
+          <button onclick="openNewBookModal()" class="px-4 py-2.5 rounded-2xl accent-bg text-xs font-bold flex items-center gap-1.5 shadow-md">
+            <i data-lucide="plus" class="w-4 h-4"></i><span>新增書籍</span>
+          </button>
         </div>
+      </header>
+
+      <section class="space-y-4">
+        <h2 class="font-bold text-lg flex items-center gap-2"><span>📖</span> 正在閱讀中（多書並行書架）</h2>
+        <div id="reading-books-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+      </section>
+
+      <section class="space-y-4 pt-2">
+        <h2 class="font-bold text-lg flex items-center gap-2"><span>🏆</span> 過往完讀書牆</h2>
+        <div id="completed-books-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+      </section>
+    </div>
+  </div>
+
+  <!-- 視圖 B：工作區 -->
+  <div id="view-workspace" class="hidden min-h-screen">
+    <header class="sticky top-0 z-30 backdrop-blur-md bg-opacity-90 card-surface border-b border-custom px-4 py-3 shadow-sm">
+      <div class="max-w-5xl mx-auto flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5 flex-1 min-w-0">
+          <button onclick="navigateToLibrary()" class="px-3 py-2 rounded-xl border border-custom text-xs font-bold flex items-center gap-1.5 shrink-0">
+            <i data-lucide="arrow-left" class="w-4 h-4 accent-text"></i><span>我的書房</span>
+          </button>
+          <button onclick="openBadgeModal()" class="relative group w-11 h-11 rounded-2xl border-2 border-custom flex items-center justify-center text-xl shrink-0 overflow-hidden bg-amber-50/50">
+            <span id="ws-badge-emoji">🌿</span>
+            <img id="ws-badge-img" src="" alt="徽章" class="hidden w-full h-full object-cover" />
+          </button>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2">
+              <select id="ws-quick-book-switch" onchange="openBookWorkspace(this.value)" class="text-xs font-bold px-2 py-0.5 rounded-lg accent-bg-soft focus:outline-none max-w-[160px] truncate"></select>
+              <input id="ws-book-author" type="text" maxlength="30" oninput="updateCurrentBookMeta()" class="text-xs text-muted-custom bg-transparent border-b border-transparent hover:border-custom focus:outline-none w-24 truncate" />
+            </div>
+            <input id="ws-book-title" type="text" maxlength="50" oninput="updateCurrentBookMeta()" class="w-full font-bold text-base md:text-lg bg-transparent border-b border-transparent hover:border-custom focus:outline-none truncate mt-0.5" />
+          </div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0 flex-wrap">
+          <div class="inline-flex rounded-xl p-1 border border-custom bg-black/5">
+            <button id="mode-paper-btn" onclick="switchReadingMode('paper')" class="px-2.5 py-1 rounded-lg text-xs font-medium accent-bg">📖 紙本書</button>
+            <button id="mode-ebook-btn" onclick="switchReadingMode('ebook')" class="px-2.5 py-1 rounded-lg text-xs font-medium text-muted-custom">📱 電子書</button>
+          </div>
+          <button onclick="toggleBookCompletedStatus()" class="px-3 py-2 rounded-xl border border-custom card-surface text-xs font-bold flex items-center gap-1.5">
+            <i data-lucide="award" class="w-4 h-4 accent-text"></i><span id="label-toggle-complete">標記已讀完</span>
+          </button>
+          <button onclick="toggleStyleDrawer()" class="p-2 rounded-xl accent-bg-soft text-xs font-semibold">
+            <i data-lucide="palette" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
     </header>
 
-    <!-- 主容器 -->
-    <main id="mainContainer" class="flex-1 max-w-5xl w-full mx-auto p-4 md:p-6"></main>
+    <main class="max-w-5xl mx-auto px-4 pt-6 space-y-6">
+      <nav class="grid grid-cols-3 gap-2 p-1.5 rounded-2xl card-surface border border-custom shadow-sm">
+        <button onclick="switchStage('pre')" id="tab-pre" class="stage-tab py-2.5 px-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 accent-bg shadow-sm"><span>📖 閱讀前</span></button>
+        <button onclick="switchStage('while')" id="tab-while" class="stage-tab py-2.5 px-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 text-muted-custom"><span>🔍 閱讀中</span></button>
+        <button onclick="switchStage('post')" id="tab-post" class="stage-tab py-2.5 px-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 text-muted-custom"><span>✍️ 閱讀後</span></button>
+      </nav>
 
-    <!-- 風格與自訂工作室 Modal -->
-    <div id="styleModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden z-50 flex justify-center items-center p-4">
-        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-amber-100 space-y-4">
-            <div class="flex justify-between items-center border-b pb-3">
-                <h3 class="font-bold text-lg text-amber-900">🎨 個人化視覺與字體工作室</h3>
-                <button onclick="toggleStyleModal()" class="text-slate-400 hover:text-slate-600 font-bold text-xl">×</button>
-            </div>
-            <div>
-                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">選擇護眼主題色彩</label>
-                <div class="grid grid-cols-4 gap-2 mt-2">
-                    <button onclick="setTheme('amber')" class="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs font-medium text-amber-900">晨光奶油</button>
-                    <button onclick="setTheme('emerald')" class="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs font-medium text-emerald-900">森林抹茶</button>
-                    <button onclick="setTheme('blue')" class="p-3 rounded-xl bg-blue-50 border border-blue-200 text-xs font-medium text-blue-900">莫蘭迪藍</button>
-                    <button onclick="setTheme('dark')" class="p-3 rounded-xl bg-slate-900 border border-slate-700 text-xs font-medium text-slate-100">深夜護眼</button>
-                </div>
-            </div>
-            <div>
-                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">選擇字體風格</label>
-                <div class="grid grid-cols-3 gap-2 mt-2">
-                    <button onclick="setFont('sans')" class="p-2 rounded-lg border text-xs font-sans-tc">現代無襯線</button>
-                    <button onclick="setFont('serif')" class="p-2 rounded-lg border text-xs font-serif-tc">書卷明體</button>
-                    <button onclick="setFont('handwriting')" class="p-2 rounded-lg border text-xs font-handwriting text-base">手帳字體</button>
-                </div>
-            </div>
-            <div>
-                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">自訂桌布圖片 (https 網址)</label>
-                <input type="text" id="bgImageUrlInput" maxlength="500" placeholder="https://example.com/wallpaper.jpg" class="w-full mt-2 p-2 border rounded-lg text-xs" onchange="setCustomBg(this.value)">
-            </div>
-            <button onclick="toggleStyleModal()" class="w-full py-2.5 bg-amber-600 text-white font-medium rounded-xl text-sm shadow hover:bg-amber-700 transition">儲存設定</button>
+      <!-- 階段一 -->
+      <div id="stage-pre" class="stage-content space-y-6">
+        <div class="card-surface border border-custom rounded-3xl p-6 shadow-sm space-y-4">
+          <h3 class="font-bold text-base">🎯 帶目標閱讀：4 個無劇透思考題</h3>
+          <div id="pre-questions-list" class="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-sm"></div>
         </div>
-    </div>
-
-    <!-- 備份與還原 Modal -->
-    <div id="backupModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden z-50 flex justify-center items-center p-4">
-        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-emerald-100 space-y-4">
-            <div class="flex justify-between items-center border-b pb-3">
-                <h3 class="font-bold text-lg text-emerald-900">📦 閱讀手札備份與還原</h3>
-                <button onclick="toggleBackupModal()" class="text-slate-400 hover:text-slate-600 font-bold text-xl">×</button>
-            </div>
-            <p class="text-xs text-slate-600 leading-relaxed">
-                您可以隨時將所有書單與筆記匯出成備份檔，或透過備份檔在不同裝置間還原。
-            </p>
-            <div class="space-y-2">
-                <button onclick="exportBackup()" class="w-full py-2.5 bg-emerald-600 text-white font-medium rounded-xl text-sm shadow hover:bg-emerald-700 transition">📥 匯出加密備份檔 (.enc)</button>
-                <div class="relative">
-                    <button onclick="document.getElementById('importFile').click()" class="w-full py-2.5 bg-slate-100 text-slate-700 border border-slate-200 font-medium rounded-xl text-sm shadow-sm hover:bg-slate-200 transition">📤 匯入還原備份檔</button>
-                    <input type="file" id="importFile" accept=".enc,.json" class="hidden" onchange="importBackup(event)">
-                </div>
-            </div>
+        <div class="card-surface border border-custom rounded-3xl p-6 shadow-sm space-y-4">
+          <h3 class="font-bold text-base">🏷️ 彩色索引貼分類系統</h3>
+          <div id="sticky-tags-editor" class="grid grid-cols-1 md:grid-cols-3 gap-3"></div>
         </div>
+      </div>
+
+      <!-- 階段二 -->
+      <div id="stage-while" class="stage-content hidden space-y-6">
+        <div class="card-surface border border-custom rounded-3xl p-6 shadow-sm space-y-5">
+          <h3 class="font-bold text-base">📌 閱讀批注與索引貼紀錄</h3>
+          <div class="p-4 rounded-2xl border border-custom space-y-3">
+            <div id="note-tag-selector" class="flex flex-wrap gap-2"></div>
+            <input id="note-page-input" type="text" maxlength="20" placeholder="頁碼 / 章節" class="px-3 py-1 rounded-xl border border-custom text-xs bg-transparent w-36 focus:outline-none" />
+            <textarea id="note-quote-input" rows="2" maxlength="500" placeholder="摘錄原文..." class="w-full p-2.5 rounded-xl border border-custom text-sm bg-transparent focus:outline-none"></textarea>
+            <textarea id="note-thought-input" rows="2" maxlength="1000" placeholder="寫下想法..." class="w-full p-2.5 rounded-xl border border-custom text-sm bg-transparent focus:outline-none"></textarea>
+            <button onclick="addReadingNote()" class="px-4 py-2 rounded-xl accent-bg text-xs font-bold">儲存批注</button>
+          </div>
+          <div id="notes-list-container" class="space-y-3"></div>
+        </div>
+      </div>
+
+      <!-- 階段三 -->
+      <div id="stage-post" class="stage-content hidden space-y-6">
+        <div class="card-surface border border-custom rounded-3xl p-6 shadow-sm space-y-4">
+          <h3 class="font-bold text-base">📝 真誠讀後感整合</h3>
+          <textarea id="final-essay-output" rows="6" maxlength="3000" oninput="saveCurrentEssay()" placeholder="在此輸入或產生讀後感..." class="w-full p-4 rounded-2xl border border-custom text-sm bg-transparent focus:outline-none"></textarea>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- 新增書籍 Modal -->
+  <div id="new-book-modal" class="fixed inset-0 bg-black/45 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+    <div class="card-surface border border-custom rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5">
+      <div class="flex items-center justify-between border-b border-custom pb-3">
+        <h3 class="font-bold text-base">📚 新增一本書</h3>
+        <button onclick="closeNewBookModal()"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <div class="space-y-3 text-sm">
+        <input id="nb-title" type="text" maxlength="50" placeholder="書名 *" class="w-full p-2.5 rounded-xl border border-custom bg-transparent focus:outline-none" />
+        <input id="nb-author" type="text" maxlength="30" placeholder="作者" class="w-full p-2.5 rounded-xl border border-custom bg-transparent focus:outline-none" />
+      </div>
+      <div class="flex justify-end gap-2">
+        <button onclick="closeNewBookModal()" class="px-4 py-2 rounded-xl text-xs text-muted-custom">取消</button>
+        <button onclick="createNewBook()" class="px-5 py-2 rounded-xl accent-bg text-xs font-bold">建立</button>
+      </div>
     </div>
+  </div>
 
-    <script>
-        // 安全防護與資料處理核心
-        const SecurityGuard = {
-            escapeHTML(str) {
-                if (typeof str !== 'string') return '';
-                return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-            },
-            sanitizeUrl(url) {
-                if (!url || typeof url !== 'string') return '';
-                const trimmed = url.trim();
-                if (/^https?:\/\/[^\s"'<>]+$/i.test(trimmed)) return trimmed;
-                alert('⚠️ 偵測到不安全的網址格式，已自動攔截！');
-                return '';
-            },
-            sanitizeInput(str, maxLength = 200) {
-                if (typeof str !== 'string') return '';
-                return str.trim().slice(0, maxLength);
-            },
-            lastActionTime: 0,
-            checkRateLimit() {
-                const now = Date.now();
-                if (now - this.lastActionTime < 600) return false;
-                this.lastActionTime = now;
-                return true;
-            }
-        };
+  <!-- 風格抽屜 -->
+  <aside id="style-drawer" class="fixed top-0 right-0 h-full w-80 card-surface border-l border-custom z-50 p-6 shadow-2xl transform translate-x-full transition-transform duration-300 overflow-y-auto space-y-6">
+    <div class="flex items-center justify-between border-b border-custom pb-4">
+      <h2 class="font-bold text-base">個人化風格工作室</h2>
+      <button onclick="toggleStyleDrawer()"><i data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+    <div class="space-y-2">
+      <label class="block text-xs font-bold text-muted-custom">護眼背景主題</label>
+      <div class="grid grid-cols-2 gap-2 text-xs">
+        <button onclick="setTheme('cream')" class="p-2.5 rounded-xl border border-custom">晨光奶油</button>
+        <button onclick="setTheme('matcha')" class="p-2.5 rounded-xl border border-custom">森林抹茶</button>
+        <button onclick="setTheme('morandi')" class="p-2.5 rounded-xl border border-custom">莫蘭迪霧藍</button>
+        <button onclick="setTheme('dark')" class="p-2.5 rounded-xl border border-custom">深夜護眼</button>
+      </div>
+    </div>
+  </aside>
 
-        const defaultData = {
-            books: [
-                { id: '1', title: '1cm + me', author: '金銀珠', badge: '☕', type: '紙本書', totalPages: 250, readPages: 45, status: 'reading', note: '學會用微小的視角轉念。' },
-                { id: '2', title: '3分鐘未來日記', author: '山田弘美', badge: '✨', type: '電子書', totalPages: 180, readPages: 180, status: 'completed', note: '寫下願望並加上情緒感受！' }
-            ],
-            currentBookId: null,
-            theme: 'amber',
-            font: 'sans',
-            customBg: ''
-        };
+  <script>
+    // ==================== 🛡️ 嚴密資安防禦模組 (Security Guard) ====================
+    const SecurityGuard = {
+      // XSS 跨站腳本防禦：將所有 HTML 特殊字元轉義
+      escapeHTML(str) {
+        if (typeof str !== 'string') return '';
+        return str
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      },
 
-        function loadSafeState() {
-            try {
-                const raw = localStorage.getItem('ai_reading_app_data');
-                if (!raw) return defaultData;
-                const parsed = JSON.parse(raw);
-                if (!parsed || !Array.isArray(parsed.books)) throw new Error();
-                return parsed;
-            } catch (e) {
-                return defaultData;
-            }
+      // URL 白名單過濾：防止 javascript: 等惡意協議注入
+      sanitizeUrl(url) {
+        if (!url || typeof url !== 'string') return '';
+        const trimmed = url.trim();
+        const isSafeHttp = /^https?:\/\/[^\s"'<>]+$/i.test(trimmed);
+        const isSafeDataImg = /^data:image\/(png|jpeg|jpg|gif|webp);base64,[a-z0-9+/=]+$/i.test(trimmed);
+        if (isSafeHttp || isSafeDataImg) return trimmed;
+        alert('⚠️ 安全警告：偵測到不安全的網址格式，已自動攔截！');
+        return '';
+      },
+
+      // 輸入長度與非法字元控制
+      sanitizeInput(str, maxLength = 200) {
+        if (typeof str !== 'string') return '';
+        return str.trim().slice(0, maxLength);
+      },
+
+      // 防連點節流保護 (Rate Limiter)
+      lastActionTime: 0,
+      checkRateLimit(cooldownMs = 600) {
+        const now = Date.now();
+        if (now - this.lastActionTime < cooldownMs) return false;
+        this.lastActionTime = now;
+        return true;
+      }
+    };
+
+    // ==================== 資料狀態與安全載入 ====================
+    const STORAGE_KEY = 'ai_reading_secure_v2';
+
+    const DEFAULT_STATE = {
+      activeView: 'library',
+      activeBookId: 'book_1',
+      theme: 'cream',
+      accentColor: '#D97757',
+      books: [
+        {
+          id: 'book_1',
+          title: '1cm + me',
+          author: '金銀珠',
+          status: 'reading',
+          badgeEmoji: '🌿',
+          tags: [
+            { id: 't1', color: '#F59E0B', name: '轉念視角', desc: '換個角度看日常' },
+            { id: 't2', color: '#10B981', name: '行動靈感', desc: '微小實驗' }
+          ],
+          preQuestions: ['這本書想解決的核心痛點是什麼？', '作者提出了什麼獨特視角？'],
+          notes: [],
+          finalEssay: ''
         }
+      ]
+    };
 
-        let appData = loadSafeState();
-
-        function saveState() {
-            try {
-                localStorage.setItem('ai_reading_app_data', JSON.stringify(appData));
-            } catch (e) {
-                alert('⚠️ 儲存失敗：瀏覽器儲存空間可能已滿。');
-            }
+    function loadSafeState() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (!saved) return JSON.parse(JSON.stringify(DEFAULT_STATE));
+        const parsed = JSON.parse(saved);
+        // 嚴格驗證資料結構完整性，防止遭外部竄改導致崩潰
+        if (!parsed || !Array.isArray(parsed.books) || parsed.books.length === 0) {
+          throw new Error('資料結構異常');
         }
+        return parsed;
+      } catch (e) {
+        console.warn('偵測到本機資料異常，已安全還原預設狀態', e);
+        return JSON.parse(JSON.stringify(DEFAULT_STATE));
+      }
+    }
 
-        function render() {
-            if (appData.currentBookId === null) {
-                renderHomeView();
-                document.getElementById('currentViewTitle').innerText = '個人書房';
-            } else {
-                renderBookWorkspace();
-            }
-            applyThemeAndFont();
-        }
+    let appState = loadSafeState();
 
-        function renderHomeView() {
-            const container = document.getElementById('mainContainer');
-            const readingBooks = appData.books.filter(b => b.status === 'reading');
-            const completedBooks = appData.books.filter(b => b.status === 'completed');
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+      } catch (e) {
+        alert('⚠️ 儲存失敗：瀏覽器空間已滿。');
+      }
+    }
 
-            container.innerHTML = `
-                <div class="space-y-6">
-                    <div class="bg-white/90 backdrop-blur-md p-6 rounded-3xl shadow-sm border border-amber-100 flex flex-col md:flex-row justify-between items-center gap-4">
-                        <div>
-                            <h2 class="text-2xl font-bold text-amber-900">📖 歡迎回到你的個人閱讀書房</h2>
-                            <p class="text-xs text-slate-500 mt-1">在這裡管理你的多書庫、檢視閱讀進度與完讀成就。</p>
-                        </div>
-                        <button onclick="addNewBookPrompt()" class="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-2xl text-sm font-medium shadow-md transition flex items-center space-x-2">
-                            <span>＋ 新增一本書</span>
-                        </button>
-                    </div>
+    function getCurrentBook() {
+      return appState.books.find(b => b.id === appState.activeBookId) || appState.books[0];
+    }
 
-                    <div>
-                        <h3 class="text-sm font-bold text-slate-600 uppercase tracking-wider mb-3">🔥 正在閱讀中的書庫</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            ${readingBooks.map(book => {
-                                const pct = Math.min(100, Math.max(0, (Number(book.readPages) / (Number(book.totalPages) || 1)) * 100));
-                                return `
-                                <div class="bg-white/90 backdrop-blur-md p-5 rounded-2xl border border-amber-100 shadow-sm hover:shadow-md transition flex flex-col justify-between">
-                                    <div>
-                                        <div class="flex justify-between items-start">
-                                            <div class="flex items-center space-x-3">
-                                                <span class="text-3xl bg-amber-50 p-2 rounded-2xl">${SecurityGuard.escapeHTML(book.badge)}</span>
-                                                <div>
-                                                    <h4 class="font-bold text-base text-slate-800">${SecurityGuard.escapeHTML(book.title)}</h4>
-                                                    <p class="text-xs text-slate-500">作者：${SecurityGuard.escapeHTML(book.author)} | 載體：${SecurityGuard.escapeHTML(book.type)}</p>
-                                                </div>
-                                            </div>
-                                            <span class="text-xs bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full font-medium">進行中</span>
-                                        </div>
-                                        <div class="mt-4">
-                                            <div class="flex justify-between text-xs text-slate-500 mb-1">
-                                                <span>閱讀進度</span>
-                                                <span>${Number(book.readPages)} / ${Number(book.totalPages)} 頁</span>
-                                            </div>
-                                            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                                                <div class="bg-amber-600 h-full rounded-full" style="width: ${pct}%"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="mt-5 flex justify-end space-x-2">
-                                        <button onclick="openBook('${SecurityGuard.escapeHTML(book.id)}')" class="px-4 py-2 bg-amber-700 hover:bg-amber-800 text-white rounded-xl text-xs font-medium transition">進入全攻略工作區</button>
-                                    </div>
-                                </div>`;
-                            }).join('')}
-                        </div>
-                    </div>
+    function showToast(msg) {
+      const container = document.getElementById('toast-container');
+      const el = document.createElement('div');
+      el.className = 'px-4 py-2.5 rounded-2xl shadow-lg text-xs font-medium accent-bg flex items-center gap-2';
+      el.innerHTML = `<span>✨</span><span>${SecurityGuard.escapeHTML(msg)}</span>`;
+      container.appendChild(el);
+      setTimeout(() => el.remove(), 2500);
+    }
 
-                    ${completedBooks.length > 0 ? `
-                        <div>
-                            <h3 class="text-sm font-bold text-slate-600 uppercase tracking-wider mb-3">🏆 過往完讀書牆</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                ${completedBooks.map(book => `
-                                    <div class="bg-white/70 backdrop-blur-sm p-4 rounded-2xl border border-slate-200">
-                                        <div class="flex items-center space-x-2">
-                                            <span class="text-2xl">${SecurityGuard.escapeHTML(book.badge)}</span>
-                                            <div>
-                                                <h4 class="font-bold text-sm text-slate-800">${SecurityGuard.escapeHTML(book.title)}</h4>
-                                                <p class="text-[10px] text-slate-500">已完讀 ｜ 筆記：${SecurityGuard.escapeHTML(book.note || '無')}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    ` : ''}
-                </div>
-            `;
-        }
+    // ==================== 視圖渲染與防護輸出 ====================
+    function navigateToLibrary() {
+      appState.activeView = 'library';
+      saveState();
+      document.getElementById('view-workspace').classList.add('hidden');
+      document.getElementById('view-library').classList.remove('hidden');
+      renderLibraryView();
+      lucide.createIcons();
+    }
 
-        function openBook(id) { appData.currentBookId = id; render(); }
-        function backToHome() { appData.currentBookId = null; render(); }
+    function openBookWorkspace(bookId) {
+      const target = appState.books.find(b => b.id === bookId);
+      if (!target) return;
+      appState.activeBookId = bookId;
+      appState.activeView = 'workspace';
+      saveState();
+      document.getElementById('view-library').classList.add('hidden');
+      document.getElementById('view-workspace').classList.remove('hidden');
+      renderWorkspaceView();
+      lucide.createIcons();
+    }
 
-        function addNewBookPrompt() {
-            if (!SecurityGuard.checkRateLimit()) return;
-            const title = SecurityGuard.sanitizeInput(prompt("請輸入新書的書名：", "原子習慣"), 50);
-            if (!title) return;
-            const author = SecurityGuard.sanitizeInput(prompt("請輸入作者：", "詹姆斯·克利爾"), 30);
-            const badge = SecurityGuard.sanitizeInput(prompt("請輸入代表這本書的 Emoji：", "🎯"), 4);
-            const totalPages = Math.min(10000, Math.max(1, parseInt(prompt("請輸入總頁數：", "300")) || 200));
+    function renderLibraryView() {
+      const readingBooks = appState.books.filter(b => b.status !== 'completed');
+      const completedBooks = appState.books.filter(b => b.status === 'completed');
 
-            appData.books.push({
-                id: Date.now().toString(),
-                title, author: author || '未知', badge: badge || '📖',
-                type: '紙本書', totalPages, readPages: 0, status: 'reading', note: ''
-            });
-            saveState();
-            render();
-        }
+      document.getElementById('reading-books-grid').innerHTML = readingBooks.map(book => `
+        <div onclick="openBookWorkspace('${SecurityGuard.escapeHTML(book.id)}')" class="cursor-pointer glass-card border rounded-3xl p-5 shadow-sm hover:shadow-md transition-all">
+          <div class="flex items-center gap-3.5">
+            <div class="w-12 h-12 rounded-2xl border border-custom flex items-center justify-center text-2xl">${SecurityGuard.escapeHTML(book.badgeEmoji || '📖')}</div>
+            <div class="flex-1 min-w-0">
+              <h3 class="font-bold text-base truncate">${SecurityGuard.escapeHTML(book.title)}</h3>
+              <p class="text-xs text-muted-custom truncate">${SecurityGuard.escapeHTML(book.author || '')}</p>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
 
-        function renderBookWorkspace() {
-            const book = appData.books.find(b => b.id === appData.currentBookId);
-            if (!book) { backToHome(); return; }
-            document.getElementById('currentViewTitle').innerText = book.title;
+    function renderWorkspaceView() {
+      const book = getCurrentBook();
+      if (!book) return;
 
-            document.getElementById('mainContainer').innerHTML = `
-                <div class="space-y-6">
-                    <div class="bg-white/90 backdrop-blur-md p-5 rounded-3xl shadow-sm border border-amber-100 flex justify-between items-center">
-                        <div class="flex items-center space-x-3">
-                            <button onclick="backToHome()" class="p-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-xs font-bold text-slate-600 transition">⬅ 返回書房</button>
-                            <div>
-                                <h2 class="text-xl font-bold text-amber-900">${SecurityGuard.escapeHTML(book.badge)} ${SecurityGuard.escapeHTML(book.title)} <span class="text-xs font-normal text-slate-500">by ${SecurityGuard.escapeHTML(book.author)}</span></h2>
-                                <p class="text-xs text-slate-500">載體：${SecurityGuard.escapeHTML(book.type)} ｜ 總頁數：${Number(book.totalPages)}頁</p>
-                            </div>
-                        </div>
-                        <div class="flex space-x-2">
-                            <button onclick="markAsCompleted('${SecurityGuard.escapeHTML(book.id)}')" class="px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-medium hover:bg-emerald-100 transition">標記已讀完</button>
-                            <button onclick="window.print()" class="px-3 py-1.5 bg-amber-50 text-amber-800 border border-amber-200 rounded-xl text-xs font-medium hover:bg-amber-100 transition">🖨️ 列印導引單</button>
-                        </div>
-                    </div>
+      document.getElementById('ws-book-title').value = book.title;
+      document.getElementById('ws-book-author').value = book.author;
+      document.getElementById('final-essay-output').value = book.finalEssay || '';
 
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div class="bg-white/90 backdrop-blur-md p-5 rounded-2xl border border-amber-100 shadow-sm space-y-4">
-                            <h3 class="font-bold text-amber-900 border-b pb-2 flex items-center justify-between">
-                                <span>📖 閱讀前：選書與計畫</span>
-                                <span class="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded">階段 1</span>
-                            </h3>
-                            <div class="space-y-3 text-xs text-slate-700">
-                                <div class="p-3 bg-amber-50/50 rounded-xl border border-amber-100">
-                                    <p class="font-bold text-amber-900">💡 建議索引貼系統：</p>
-                                    <p class="mt-1">🟡 黃色：核心觀念與機制<br>🟢 綠色：微行動指南<br>🔵 藍色：觸動金句語錄</p>
-                                </div>
-                                <div class="p-3 bg-amber-50/50 rounded-xl border border-amber-100">
-                                    <p class="font-bold text-amber-900">🎯 帶目標思考題：</p>
-                                    <p class="mt-1">1. 這本書要解決的核心痛點是什麼？<br>2. 作者的核心主張與我有何連結？</p>
-                                </div>
-                            </div>
-                        </div>
+      renderPreQuestions();
+      renderStickyTags();
+      renderNotesList();
+    }
 
-                        <div class="bg-white/90 backdrop-blur-md p-5 rounded-2xl border border-amber-100 shadow-sm space-y-4">
-                            <h3 class="font-bold text-amber-900 border-b pb-2 flex items-center justify-between">
-                                <span>🔍 閱讀中：解惑與理清</span>
-                                <span class="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded">階段 2</span>
-                            </h3>
-                            <div class="space-y-3 text-xs text-slate-700">
-                                <div class="p-3 bg-amber-50/50 rounded-xl border border-amber-100">
-                                    <p class="font-bold text-amber-900">🛠️ AI 即時解惑指令：</p>
-                                    <p class="mt-1 text-slate-600">「我在讀《${SecurityGuard.escapeHTML(book.title)}》，裡面提到...請用通俗易懂的例子幫我解釋。」</p>
-                                </div>
-                                <div>
-                                    <label class="font-bold text-slate-600">閱讀批注紀錄：</label>
-                                    <textarea id="bookNoteInput" maxlength="2000" class="w-full mt-1 p-2 border rounded-xl text-xs h-20" placeholder="輸入感悟...">${SecurityGuard.escapeHTML(book.note || '')}</textarea>
-                                    <button onclick="saveBookNote('${SecurityGuard.escapeHTML(book.id)}')" class="mt-2 w-full py-1.5 bg-amber-700 text-white rounded-lg text-xs font-medium">儲存批注</button>
-                                </div>
-                            </div>
-                        </div>
+    function updateCurrentBookMeta() {
+      if (!SecurityGuard.checkRateLimit(300)) return;
+      const book = getCurrentBook();
+      book.title = SecurityGuard.sanitizeInput(document.getElementById('ws-book-title').value, 50) || '未命名書籍';
+      book.author = SecurityGuard.sanitizeInput(document.getElementById('ws-book-author').value, 30) || '未知作者';
+      saveState();
+    }
 
-                        <div class="bg-white/90 backdrop-blur-md p-5 rounded-2xl border border-amber-100 shadow-sm space-y-4">
-                            <h3 class="font-bold text-amber-900 border-b pb-2 flex items-center justify-between">
-                                <span>✍️ 閱讀後：複盤與輸出</span>
-                                <span class="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded">階段 3</span>
-                            </h3>
-                            <div class="space-y-3 text-xs text-slate-700">
-                                <div class="p-3 bg-amber-50/50 rounded-xl border border-amber-100">
-                                    <p class="font-bold text-amber-900">📝 一句話複盤模板：</p>
-                                    <p class="mt-1 text-slate-600">「今天讀了《${SecurityGuard.escapeHTML(book.title)}》，最觸動我的一點是『＿＿』。」</p>
-                                </div>
-                                <button onclick="alert('已彙整您的批注與讀後感！')" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl text-xs transition">✨ AI 一鍵生成讀後感</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
+    function openNewBookModal() { document.getElementById('new-book-modal').classList.remove('hidden'); }
+    function closeNewBookModal() { document.getElementById('new-book-modal').classList.add('hidden'); }
 
-        function saveBookNote(id) {
-            const cleanVal = SecurityGuard.sanitizeInput(document.getElementById('bookNoteInput').value, 2000);
-            const book = appData.books.find(b => b.id === id);
-            if (book) { book.note = cleanVal; saveState(); alert('✅ 批注已儲存！'); }
-        }
+    function createNewBook() {
+      if (!SecurityGuard.checkRateLimit()) return;
+      const title = SecurityGuard.sanitizeInput(document.getElementById('nb-title').value, 50);
+      if (!title) { showToast('請輸入書名'); return; }
+      const author = SecurityGuard.sanitizeInput(document.getElementById('nb-author').value, 30) || '未知作者';
 
-        function markAsCompleted(id) {
-            const book = appData.books.find(b => b.id === id);
-            if (book) { book.status = 'completed'; saveState(); backToHome(); }
-        }
+      const newBook = {
+        id: 'book_' + Date.now(),
+        title,
+        author,
+        status: 'reading',
+        badgeEmoji: '📘',
+        tags: [
+          { id: 't1', color: '#F59E0B', name: '核心觀念', desc: '關鍵論點' },
+          { id: 't2', color: '#10B981', name: '行動靈感', desc: '實踐方法' }
+        ],
+        preQuestions: ['這本書想解決的核心痛點是什麼？'],
+        notes: [],
+        finalEssay: ''
+      };
 
-        function exportBackup() {
-            const rawData = localStorage.getItem('ai_reading_app_data');
-            if (!rawData) { alert('沒有資料可備份！'); return; }
-            const encoded = btoa(encodeURIComponent(rawData));
-            const blob = new Blob([encoded], { type: 'application/json' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `AI_Reading_Backup_${new Date().toISOString().slice(0, 10)}.enc`;
-            a.click();
-        }
+      appState.books.unshift(newBook);
+      saveState();
+      closeNewBookModal();
+      openBookWorkspace(newBook.id);
+      showToast('新書建立成功！');
+    }
 
-        function importBackup(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                try {
-                    const rawData = decodeURIComponent(atob(evt.target.result));
-                    const parsed = JSON.parse(rawData);
-                    if (!parsed || !Array.isArray(parsed.books)) throw new Error();
-                    localStorage.setItem('ai_reading_app_data', JSON.stringify(parsed));
-                    appData = parsed;
-                    render();
-                    alert('✅ 成功從備份檔還原！');
-                } catch (err) {
-                    alert('❌ 備份檔格式錯誤或已損毀。');
-                }
-            };
-            reader.readAsText(file);
-        }
+    function renderPreQuestions() {
+      const book = getCurrentBook();
+      document.getElementById('pre-questions-list').innerHTML = book.preQuestions.map((q, idx) => `
+        <div class="p-3 rounded-2xl border border-custom flex items-start gap-2.5">
+          <span class="w-5 h-5 rounded-full accent-bg-soft text-xs font-bold flex items-center justify-center shrink-0">${idx + 1}</span>
+          <span class="text-xs leading-relaxed">${SecurityGuard.escapeHTML(q)}</span>
+        </div>
+      `).join('');
+    }
 
-        function toggleStyleModal() { document.getElementById('styleModal').classList.toggle('hidden'); }
-        function toggleBackupModal() { document.getElementById('backupModal').classList.toggle('hidden'); }
+    function renderStickyTags() {
+      const book = getCurrentBook();
+      document.getElementById('sticky-tags-editor').innerHTML = book.tags.map(tag => `
+        <div class="p-3.5 rounded-2xl border border-custom flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <span class="w-4 h-4 rounded-full" style="background-color: ${SecurityGuard.escapeHTML(tag.color)}"></span>
+            <span class="font-bold text-sm">${SecurityGuard.escapeHTML(tag.name)}</span>
+          </div>
+          <span class="text-xs text-muted-custom">${SecurityGuard.escapeHTML(tag.desc)}</span>
+        </div>
+      `).join('');
 
-        function setTheme(t) { appData.theme = t; saveState(); applyThemeAndFont(); }
-        function setFont(f) { appData.font = f; saveState(); applyThemeAndFont(); }
-        function setCustomBg(url) {
-            appData.customBg = SecurityGuard.sanitizeUrl(url);
-            saveState();
-            applyThemeAndFont();
-        }
+      document.getElementById('note-tag-selector').innerHTML = book.tags.map(tag => `
+        <span class="px-3 py-1 rounded-full text-xs font-medium border" style="border-color: ${tag.color}; background-color: ${tag.color}20;">${SecurityGuard.escapeHTML(tag.name)}</span>
+      `).join('');
+    }
 
-        function applyThemeAndFont() {
-            const body = document.getElementById('appBody');
-            body.className = `min-h-screen flex flex-col transition-all duration-300 `;
-            if (appData.font === 'serif') body.classList.add('font-serif-tc');
-            else if (appData.font === 'handwriting') body.classList.add('font-handwriting');
-            else body.classList.add('font-sans-tc');
+    function addReadingNote() {
+      if (!SecurityGuard.checkRateLimit()) return;
+      const book = getCurrentBook();
+      const page = SecurityGuard.sanitizeInput(document.getElementById('note-page-input').value, 20) || '隨記';
+      const quote = SecurityGuard.sanitizeInput(document.getElementById('note-quote-input').value, 500);
+      const thought = SecurityGuard.sanitizeInput(document.getElementById('note-thought-input').value, 1000);
 
-            if (appData.theme === 'emerald') body.classList.add('bg-emerald-50/50', 'text-slate-800');
-            else if (appData.theme === 'blue') body.classList.add('bg-blue-50/50', 'text-slate-800');
-            else if (appData.theme === 'dark') body.classList.add('bg-slate-900', 'text-slate-100');
-            else body.classList.add('bg-amber-50/50', 'text-slate-800');
+      if (!quote && !thought) { showToast('請至少輸入摘錄或想法'); return; }
 
-            if (appData.customBg) {
-                body.style.backgroundImage = `url('${appData.customBg}')`;
-                body.style.backgroundSize = 'cover';
-                body.style.backgroundPosition = 'center';
-            } else {
-                body.style.backgroundImage = 'none';
-            }
-        }
+      book.notes.unshift({
+        id: 'note_' + Date.now(),
+        page, quote, thought
+      });
+      saveState();
+      document.getElementById('note-page-input').value = '';
+      document.getElementById('note-quote-input').value = '';
+      document.getElementById('note-thought-input').value = '';
+      renderNotesList();
+      showToast('批注已安全儲存！');
+    }
 
-        render();
-    </script>
+    function renderNotesList() {
+      const book = getCurrentBook();
+      document.getElementById('notes-list-container').innerHTML = book.notes.map(n => `
+        <div class="p-4 rounded-2xl border border-custom space-y-1">
+          <div class="text-xs text-muted-custom">${SecurityGuard.escapeHTML(n.page)}</div>
+          ${n.quote ? `<blockquote class="text-xs italic text-muted-custom">「${SecurityGuard.escapeHTML(n.quote)}」</blockquote>` : ''}
+          ${n.thought ? `<p class="text-sm">${SecurityGuard.escapeHTML(n.thought)}</p>` : ''}
+        </div>
+      `).join('');
+    }
+
+    function saveCurrentEssay() {
+      if (!SecurityGuard.checkRateLimit(1000)) return;
+      const book = getCurrentBook();
+      book.finalEssay = SecurityGuard.sanitizeInput(document.getElementById('final-essay-output').value, 3000);
+      saveState();
+    }
+
+    function toggleStyleDrawer() {
+      const drawer = document.getElementById('style-drawer');
+      drawer.classList.toggle('translate-x-full');
+    }
+
+    function setTheme(t) {
+      appState.theme = t;
+      document.documentElement.setAttribute('data-theme', t);
+      saveState();
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      setTheme(appState.theme);
+      if (appState.activeView === 'workspace') {
+        openBookWorkspace(appState.activeBookId);
+      } else {
+        navigateToLibrary();
+      }
+    });
+  </script>
 </body>
 </html>
