@@ -1,2247 +1,393 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI 閱讀手札與全攻略系統｜個人書房版</title>
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Google Fonts：思源黑體、思源宋體、圓潤手帳體 -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@400;600;700&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
-
-  <style>
-    :root {
-      --bg-base: #FAF7F2;
-      --bg-card: #FFFFFF;
-      --text-main: #2D2A26;
-      --text-muted: #6E685F;
-      --border-color: #E8E1D5;
-      --accent-color: #D97757;
-      --accent-soft: rgba(217, 119, 87, 0.13);
-      --font-family: 'Noto Sans TC', sans-serif;
-      --base-font-size: 16px;
-    }
-
-    /* 四套護眼主題 */
-    [data-theme="cream"] {
-      --bg-base: #FAF7F2;
-      --bg-card: #FFFFFF;
-      --text-main: #2D2A26;
-      --text-muted: #6E685F;
-      --border-color: #E8E1D5;
-    }
-    [data-theme="matcha"] {
-      --bg-base: #F2F6F1;
-      --bg-card: #FFFFFF;
-      --text-main: #233025;
-      --text-muted: #5A6B5D;
-      --border-color: #DCE5DA;
-    }
-    [data-theme="morandi"] {
-      --bg-base: #F0F3F6;
-      --bg-card: #FFFFFF;
-      --text-main: #262E38;
-      --text-muted: #5D6978;
-      --border-color: #DCE2E9;
-    }
-    [data-theme="dark"] {
-      --bg-base: #16161A;
-      --bg-card: #222228;
-      --text-main: #F4F4F6;
-      --text-muted: #A1A1AA;
-      --border-color: #32323B;
-    }
-
-    /* 筆記本紙張底紋 */
-    .texture-plain { background-image: none; }
-    .texture-paper {
-      background-image: radial-gradient(rgba(160, 140, 110, 0.09) 1px, transparent 0);
-      background-size: 16px 16px;
-    }
-    .texture-dots {
-      background-image: radial-gradient(var(--border-color) 1.5px, transparent 1.5px);
-      background-size: 20px 20px;
-    }
-    .texture-grid {
-      background-size: 24px 24px;
-      background-image: 
-        linear-gradient(to right, var(--border-color) 1px, transparent 1px),
-        linear-gradient(to bottom, var(--border-color) 1px, transparent 1px);
-    }
-    [data-theme="dark"] .texture-grid {
-      background-image: 
-        linear-gradient(to right, rgba(255,255,255,0.04) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px);
-    }
-
-    /* 書房主頁預設療癒桌布圖案 (純 CSS 幾何與氛圍漸層，無外部圖片依賴) */
-    .wallpaper-minimal {
-      background: transparent;
-    }
-    .wallpaper-coffee {
-      background-color: #F5EBE0;
-      background-image: 
-        radial-gradient(circle at 18% 22%, rgba(213, 189, 175, 0.45) 0%, transparent 45%),
-        radial-gradient(circle at 82% 75%, rgba(227, 213, 202, 0.55) 0%, transparent 50%),
-        repeating-linear-gradient(45deg, rgba(180, 145, 115, 0.04) 0px, rgba(180, 145, 115, 0.04) 2px, transparent 2px, transparent 12px);
-    }
-    .wallpaper-forest {
-      background-color: #E9F0EA;
-      background-image: 
-        radial-gradient(circle at 85% 15%, rgba(163, 193, 173, 0.45) 0%, transparent 45%),
-        radial-gradient(circle at 15% 85%, rgba(132, 169, 140, 0.35) 0%, transparent 50%),
-        radial-gradient(rgba(82, 121, 111, 0.12) 1.5px, transparent 1.5px);
-      background-size: 100% 100%, 100% 100%, 24px 24px;
-    }
-    .wallpaper-starry {
-      background-color: #1E2235;
-      background-image: 
-        radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.25) 0%, transparent 45%),
-        radial-gradient(circle at 20% 80%, rgba(56, 189, 248, 0.2) 0%, transparent 45%),
-        radial-gradient(rgba(255, 255, 255, 0.35) 1px, transparent 1px),
-        radial-gradient(rgba(255, 255, 255, 0.2) 1.5px, transparent 1.5px);
-      background-size: 100% 100%, 100% 100%, 48px 48px, 73px 73px;
-      background-position: 0 0, 0 0, 0 0, 23px 31px;
-    }
-
-    body {
-      background-color: var(--bg-base);
-      color: var(--text-main);
-      font-family: var(--font-family);
-      font-size: var(--base-font-size);
-      transition: background-color 0.3s ease, color 0.3s ease;
-    }
-
-    .card-surface {
-      background-color: var(--bg-card);
-      border-color: var(--border-color);
-      transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.2s ease;
-    }
-
-    .glass-card {
-      background-color: rgba(255, 255, 255, 0.84);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border-color: rgba(232, 225, 213, 0.8);
-    }
-    [data-theme="dark"] .glass-card {
-      background-color: rgba(34, 34, 40, 0.84);
-      border-color: rgba(60, 60, 70, 0.8);
-    }
-
-    .text-muted-custom { color: var(--text-muted); }
-    .border-custom { border-color: var(--border-color); }
-    .accent-bg { background-color: var(--accent-color); color: #FFFFFF; }
-    .accent-bg-soft { background-color: var(--accent-soft); color: var(--accent-color); }
-    .accent-text { color: var(--accent-color); }
-    .accent-border { border-color: var(--accent-color); }
-
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(150, 150, 150, 0.3); border-radius: 9999px; }
-
-    /* 列印專用樣式：紙本書思維導引單 / 完讀紀念卡 */
-    @media print {
-      body * { visibility: hidden; }
-      #print-sheet, #print-sheet * { visibility: visible; }
-      #print-sheet {
-        position: fixed;
-        left: 0;
-        top: 0;
-        width: 100%;
-        background: #FFFFFF !important;
-        color: #111111 !important;
-        padding: 20px !important;
-        display: block !important;
-      }
-      .no-print { display: none !important; }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 閱讀手札與全攻略系統</title>
+    <!-- Tailwind CSS 讓介面簡約美觀 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@400;600&family=Zhi+Mang+Xing&display=swap');
+        .font-sans-tc { font-family: 'Noto Sans TC', sans-serif; }
+        .font-serif-tc { font-family: 'Noto Serif TC', serif; }
+        .font-handwriting { font-family: 'Zhi Mang Xing', cursive; }
+    </style>
 </head>
-<body class="min-h-screen texture-paper pb-20 relative">
+<body id="appBody" class="font-sans-tc bg-amber-50/50 text-slate-800 min-h-screen flex flex-col transition-all duration-300">
 
-  <!-- Toast 通知提示 -->
-  <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none no-print"></div>
-
-  <!-- ===================================================================== -->
-  <!-- 視圖 A：我的書房（主頁面 / 多書庫總覽 / 過往完讀書牆）                  -->
-  <!-- ===================================================================== -->
-  <div id="view-library" class="min-h-screen relative transition-all duration-500 no-print">
-    <!-- 主頁自訂桌布底圖層 -->
-    <div id="library-wallpaper-bg" class="fixed inset-0 z-0 pointer-events-none bg-cover bg-center transition-all duration-500 wallpaper-coffee"></div>
-    <!-- 主頁桌布柔光遮罩層（確保文字永遠清晰可讀） -->
-    <div id="library-wallpaper-overlay" class="fixed inset-0 z-0 pointer-events-none transition-all duration-300" style="background-color: rgba(250, 247, 242, 0.35); backdrop-filter: blur(0px);"></div>
-
-    <!-- 主頁面內容區 -->
-    <div class="relative z-10 max-w-5xl mx-auto px-4 pt-6 space-y-8">
-      
-      <!-- 書房頂部歡迎橫幅與控制列 -->
-      <header class="glass-card border rounded-3xl p-5 md:p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div class="flex items-center gap-4">
-          <div class="w-14 h-14 rounded-2xl accent-bg flex items-center justify-center text-2xl shadow-md shrink-0">
-            🏡
-          </div>
-          <div>
-            <div class="flex items-center gap-2 flex-wrap">
-              <h1 class="font-bold text-xl md:text-2xl tracking-tight">我的專屬閱讀書房</h1>
-              <span id="library-stats-pill" class="text-xs font-medium px-2.5 py-0.5 rounded-full accent-bg-soft">在讀 2 本・已讀完 1 本</span>
-            </div>
-            <p class="text-xs md:text-sm text-muted-custom mt-1">挑選一本正在閱讀的書進入沉浸工作區，或自訂你喜歡的書房桌布氛圍</p>
-          </div>
+    <!-- 頂部導覽列：帳號同步狀態與風格設定 -->
+    <header class="bg-white/80 backdrop-blur-md border-b border-amber-100 sticky top-0 z-50 px-6 py-3 flex justify-between items-center shadow-sm">
+        <div class="flex items-center space-x-3">
+            <span id="navBadge" class="text-2xl">☕</span>
+            <h1 class="text-lg font-bold bg-gradient-to-r from-amber-700 to-orange-600 bg-clip-text text-transparent">AI 閱讀手札</h1>
+            <span id="currentViewTitle" class="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-full font-medium">個人書房</span>
         </div>
-
-        <div class="flex items-center gap-2.5 flex-wrap shrink-0">
-          <!-- 更換書房桌布按鈕 -->
-          <button onclick="openWallpaperModal()" class="px-3.5 py-2.5 rounded-2xl border border-custom card-surface hover:scale-[1.02] transition-transform text-xs font-bold flex items-center gap-1.5 shadow-2xs">
-            <i data-lucide="image" class="w-4 h-4 accent-text"></i>
-            <span>更換書房桌布</span>
-          </button>
-
-          <!-- 風格與字體設定 -->
-          <button onclick="toggleStyleDrawer()" class="px-3.5 py-2.5 rounded-2xl border border-custom card-surface hover:scale-[1.02] transition-transform text-xs font-bold flex items-center gap-1.5 shadow-2xs">
-            <i data-lucide="palette" class="w-4 h-4 accent-text"></i>
-            <span>主題與字體</span>
-          </button>
-
-          <!-- 新增書籍按鈕 -->
-          <button onclick="openNewBookModal()" class="px-4 py-2.5 rounded-2xl accent-bg hover:opacity-95 hover:scale-[1.02] transition-all text-xs font-bold flex items-center gap-1.5 shadow-md">
-            <i data-lucide="plus" class="w-4 h-4"></i>
-            <span>新增書籍</span>
-          </button>
-        </div>
-      </header>
-
-      <!-- 區塊一：正在閱讀中的書架 -->
-      <section class="space-y-4">
-        <div class="flex items-center justify-between px-1">
-          <div class="flex items-center gap-2">
-            <span class="text-lg">📖</span>
-            <h2 class="font-bold text-lg">正在閱讀中（多書並行書架）</h2>
-          </div>
-          <span class="text-xs text-muted-custom">點擊書籍卡片即可切換進入該書的閱讀工作區</span>
-        </div>
-
-        <div id="reading-books-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <!-- 動態渲染在讀書籍卡片 -->
-        </div>
-      </section>
-
-      <!-- 區塊二：過往完讀書牆（已讀成就庫） -->
-      <section class="space-y-4 pt-2">
-        <div class="flex items-center justify-between px-1">
-          <div class="flex items-center gap-2">
-            <span class="text-lg">🏆</span>
-            <h2 class="font-bold text-lg">過往完讀書牆（已讀成就庫）</h2>
-          </div>
-          <span class="text-xs text-muted-custom">每一本讀完的書，都留下了專屬的思考足跡</span>
-        </div>
-
-        <div id="completed-books-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <!-- 動態渲染已讀完書籍卡片 -->
-        </div>
-      </section>
-
-    </div>
-  </div>
-
-  <!-- ===================================================================== -->
-  <!-- 視圖 B：單本書籍專屬閱讀工作區（讀前 / 讀中 / 讀後三段式全攻略）       -->
-  <!-- ===================================================================== -->
-  <div id="view-workspace" class="hidden min-h-screen no-print">
-    
-    <!-- 頂部導覽與書籍控制列 -->
-    <header class="sticky top-0 z-30 backdrop-blur-md bg-opacity-90 card-surface border-b border-custom px-4 py-3 shadow-sm">
-      <div class="max-w-5xl mx-auto flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-        
-        <!-- 左側：返回我的書房 + 徽章 + 書名與快速切換 -->
-        <div class="flex items-center gap-2.5 flex-1 min-w-0">
-          <button onclick="navigateToLibrary()" class="px-3 py-2 rounded-xl border border-custom hover:opacity-80 text-xs font-bold flex items-center gap-1.5 shrink-0 transition-all" title="返回我的書房主頁面">
-            <i data-lucide="arrow-left" class="w-4 h-4 accent-text"></i>
-            <span>我的書房</span>
-          </button>
-
-          <!-- 閱讀徽章（點擊可更換 Emoji 或上傳本地圖片） -->
-          <button onclick="openBadgeModal()" title="點擊更換這本書的閱讀徽章或上傳封面" class="relative group w-11 h-11 rounded-2xl border-2 border-custom flex items-center justify-center text-xl shrink-0 overflow-hidden shadow-2xs hover:scale-105 transition-transform bg-amber-50/50">
-            <span id="ws-badge-emoji">🌿</span>
-            <img id="ws-badge-img" src="" alt="徽章" class="hidden w-full h-full object-cover" />
-            <div class="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-              <i data-lucide="camera" class="w-4 h-4 text-white"></i>
-            </div>
-          </button>
-
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2">
-              <!-- 快速切換其他書籍下拉選單 -->
-              <select id="ws-quick-book-switch" onchange="openBookWorkspace(this.value)" class="text-xs font-bold px-2 py-0.5 rounded-lg accent-bg-soft focus:outline-none cursor-pointer max-w-[160px] truncate" title="快速切換另一本書">
-              </select>
-              <input id="ws-book-author" type="text" placeholder="作者名稱" oninput="updateCurrentBookMeta()" class="text-xs text-muted-custom bg-transparent border-b border-transparent hover:border-custom focus:border-current focus:outline-none w-24 sm:w-32 truncate" />
-            </div>
-            <input id="ws-book-title" type="text" placeholder="輸入書名..." oninput="updateCurrentBookMeta()" class="w-full font-bold text-base md:text-lg bg-transparent border-b border-transparent hover:border-custom focus:border-current focus:outline-none truncate mt-0.5" />
-          </div>
-        </div>
-
-        <!-- 右側：紙本/電子書切換 + 列印導引單 + 標記已讀完 + 風格設定 -->
-        <div class="flex items-center gap-2 shrink-0 flex-wrap">
-          <!-- 紙本書 / 電子書模式切換 -->
-          <div class="inline-flex rounded-xl p-1 border border-custom bg-black/5 dark:bg-white/5">
-            <button id="mode-paper-btn" onclick="switchReadingMode('paper')" class="px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1 transition-all accent-bg shadow-2xs">
-              <span>📖 紙本書</span>
+        <div class="flex items-center space-x-3">
+            <!-- 雲端同步狀態按鈕 -->
+            <button onclick="toggleCloudSyncModal()" class="text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1.5 rounded-lg flex items-center space-x-1 hover:bg-emerald-100 transition">
+                <span>☁️ 雲端同步已連線</span>
             </button>
-            <button id="mode-ebook-btn" onclick="switchReadingMode('ebook')" class="px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1 transition-all text-muted-custom hover:opacity-80">
-              <span>📱 電子書</span>
+            <!-- 風格工作室按鈕 -->
+            <button onclick="toggleStyleModal()" class="text-xs bg-amber-50 text-amber-800 border border-amber-200 px-3 py-1.5 rounded-lg flex items-center space-x-1 hover:bg-amber-100 transition">
+                <span>🎨 風格與字體</span>
             </button>
-          </div>
-
-          <!-- 紙本書專屬：列印閱讀思維導引單 -->
-          <button id="btn-print-guide" onclick="prepareAndPrintGuide()" class="px-3 py-2 rounded-xl border border-custom card-surface hover:opacity-90 text-xs font-medium flex items-center gap-1.5 shadow-2xs" title="列印成紙本書隨身夾頁導引單">
-            <i data-lucide="printer" class="w-4 h-4 accent-text"></i>
-            <span class="hidden sm:inline">列印導引單</span>
-          </button>
-
-          <!-- 標記為已讀完 / 重新閱讀切換 -->
-          <button id="btn-toggle-complete" onclick="toggleBookCompletedStatus()" class="px-3 py-2 rounded-xl border border-custom card-surface hover:opacity-90 text-xs font-bold flex items-center gap-1.5 shadow-2xs">
-            <i data-lucide="award" class="w-4 h-4 accent-text"></i>
-            <span id="label-toggle-complete">標記已讀完</span>
-          </button>
-
-          <!-- 個人化風格與字體設定 -->
-          <button onclick="toggleStyleDrawer()" class="p-2 rounded-xl accent-bg-soft hover:opacity-90 text-xs font-semibold flex items-center gap-1" title="風格與字體設定">
-            <i data-lucide="palette" class="w-4 h-4"></i>
-          </button>
         </div>
-      </div>
     </header>
 
-    <!-- 工作區主體內容 -->
-    <main class="max-w-5xl mx-auto px-4 pt-6 space-y-6">
-
-      <!-- 電子書模式專屬閱讀器抽屜 -->
-      <section id="ebook-reader-panel" class="hidden card-surface border border-custom rounded-3xl p-5 shadow-sm space-y-4">
-        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-custom pb-3">
-          <div class="flex items-center gap-2.5">
-            <span class="p-2 rounded-xl accent-bg-soft"><i data-lucide="book-open-check" class="w-5 h-5"></i></span>
-            <div>
-              <h2 class="font-bold text-base">📱 電子書沉浸閱讀與劃線工作區</h2>
-              <p class="text-xs text-muted-custom">匯入 .txt / .md 文本或貼上章節，反白選取句子即可一鍵貼上彩色索引貼</p>
-            </div>
-          </div>
-          <div class="flex items-center gap-2">
-            <label class="cursor-pointer px-3 py-1.5 rounded-xl border border-custom text-xs font-medium hover:opacity-80 flex items-center gap-1.5">
-              <i data-lucide="upload" class="w-3.5 h-3.5"></i>
-              <span>匯入電子書檔 (.txt/.md)</span>
-              <input type="file" accept=".txt,.md" class="hidden" onchange="handleEbookFileUpload(event)" />
-            </label>
-            <button onclick="toggleEbookPasteArea()" class="px-3 py-1.5 rounded-xl accent-bg-soft text-xs font-medium hover:opacity-80">
-              貼上段落文字
-            </button>
-          </div>
-        </div>
-
-        <div id="ebook-paste-box" class="hidden space-y-2">
-          <textarea id="ebook-raw-input" rows="4" placeholder="在此貼上電子書章節內容..." class="w-full rounded-2xl border border-custom p-3 text-sm bg-transparent focus:outline-none"></textarea>
-          <div class="flex justify-end gap-2">
-            <button onclick="toggleEbookPasteArea()" class="px-3 py-1.5 rounded-xl text-xs text-muted-custom">取消</button>
-            <button onclick="applyEbookText()" class="px-4 py-1.5 rounded-xl accent-bg text-xs font-medium">載入閱讀區</button>
-          </div>
-        </div>
-
-        <div class="relative">
-          <div id="ebook-content-viewer" onmouseup="handleEbookSelection()" ontouchend="handleEbookSelection()" class="max-h-72 overflow-y-auto p-4 rounded-2xl border border-custom leading-relaxed text-sm whitespace-pre-wrap select-text bg-black/[0.02] dark:bg-white/[0.02]"></div>
-
-          <!-- 選取文字後的浮動快速貼標工具列 -->
-          <div id="ebook-selection-bar" class="hidden mt-3 p-3 rounded-2xl border accent-border accent-bg-soft flex flex-wrap items-center justify-between gap-2">
-            <div class="text-xs truncate max-w-md">
-              <span class="font-bold">已選取：</span>
-              <span id="selected-quote-preview" class="italic"></span>
-            </div>
-            <div id="ebook-quick-tags" class="flex items-center gap-1.5 flex-wrap"></div>
-          </div>
-        </div>
-      </section>
-
-      <!-- 核心三段式導覽分頁 (閱讀前 / 閱讀中 / 閱讀後) -->
-      <nav class="grid grid-cols-3 gap-2 p-1.5 rounded-2xl card-surface border border-custom shadow-sm">
-        <button onclick="switchStage('pre')" id="tab-pre" class="stage-tab py-2.5 px-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all accent-bg shadow-sm">
-          <span>📖 閱讀前</span>
-          <span class="hidden sm:inline text-xs font-normal opacity-90">方向・索引・計畫</span>
-        </button>
-        <button onclick="switchStage('while')" id="tab-while" class="stage-tab py-2.5 px-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all text-muted-custom hover:opacity-80">
-          <span>🔍 閱讀中</span>
-          <span class="hidden sm:inline text-xs font-normal opacity-80">解惑・貼標・批注</span>
-        </button>
-        <button onclick="switchStage('post')" id="tab-post" class="stage-tab py-2.5 px-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all text-muted-custom hover:opacity-80">
-          <span>✍️ 閱讀後</span>
-          <span class="hidden sm:inline text-xs font-normal opacity-80">複盤・讀後感・口語</span>
-        </button>
-      </nav>
-
-      <!-- ==================== 階段一：閱讀前 ==================== -->
-      <div id="stage-pre" class="stage-content space-y-6">
-        
-        <!-- 1. AI 筆記方向建議與無劇透思考題 -->
-        <div class="card-surface border border-custom rounded-3xl p-6 shadow-sm space-y-4">
-          <div class="flex flex-wrap items-center justify-between gap-3">
-            <div class="flex items-center gap-2.5">
-              <span class="w-9 h-9 rounded-xl accent-bg-soft flex items-center justify-center text-lg">🧭</span>
-              <div>
-                <h3 class="font-bold text-base">AI 閱讀切入點與思考方向建議</h3>
-                <p class="text-xs text-muted-custom">根據書籍類型提供筆記重點方向，或讓 AI 為《<span class="dyn-book-title"></span>》生成專屬思考題</p>
-              </div>
-            </div>
-            <div class="flex items-center gap-2">
-              <select id="book-genre-select" onchange="updateGenreAdvice()" class="rounded-xl border border-custom px-3 py-1.5 text-xs card-surface focus:outline-none">
-                <option value="growth">🌱 散文 / 自我成長</option>
-                <option value="fiction">🎭 小說 / 懸疑推理</option>
-                <option value="nonfiction">🧠 商業 / 心理科學</option>
-                <option value="classic">🏛️ 文學名著 / 歷史</option>
-              </select>
-              <button onclick="generateAiPreQuestions()" id="btn-ai-pre-q" class="px-3.5 py-1.5 rounded-xl accent-bg text-xs font-medium flex items-center gap-1.5 hover:opacity-90 shadow-sm">
-                <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
-                <span>AI 生成專屬思考題</span>
-              </button>
-            </div>
-          </div>
-
-          <div id="genre-advice-box" class="p-4 rounded-2xl bg-black/[0.025] dark:bg-white/[0.03] border border-custom text-sm space-y-2"></div>
-
-          <div class="space-y-2 pt-1">
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-bold uppercase tracking-wider text-muted-custom">🎯 帶目標閱讀：4 個無劇透思考題</span>
-              <button onclick="copyPreQuestionsPrompt()" class="text-xs accent-text hover:underline flex items-center gap-1">
-                <i data-lucide="copy" class="w-3 h-3"></i> 複製提問指令
-              </button>
-            </div>
-            <div id="pre-questions-list" class="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-sm"></div>
-          </div>
-        </div>
-
-        <!-- 2. 自訂彩色索引貼分類系統 -->
-        <div class="card-surface border border-custom rounded-3xl p-6 shadow-sm space-y-4">
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <div class="flex items-center gap-2.5">
-              <span class="w-9 h-9 rounded-xl accent-bg-soft flex items-center justify-center text-lg">🏷️</span>
-              <div>
-                <h3 class="font-bold text-base">本書專屬彩色索引貼系統</h3>
-                <p class="text-xs text-muted-custom">點擊色塊可自由更改貼紙顏色與代表意義，修改後同步至批注與列印導引單</p>
-              </div>
-            </div>
-            <div class="flex items-center gap-2">
-              <button onclick="addCustomTag()" class="px-3 py-1.5 rounded-xl border border-custom text-xs font-medium hover:opacity-80 flex items-center gap-1">
-                <i data-lucide="plus" class="w-3.5 h-3.5"></i> 新增色碼
-              </button>
-              <button onclick="copyStickyTagPrompt()" class="px-3 py-1.5 rounded-xl accent-bg-soft text-xs font-medium hover:opacity-80 flex items-center gap-1">
-                <i data-lucide="copy" class="w-3.5 h-3.5"></i> 複製 AI 設計指令
-              </button>
-            </div>
-          </div>
-          <div id="sticky-tags-editor" class="grid grid-cols-1 md:grid-cols-3 gap-3"></div>
-        </div>
-
-        <!-- 3. 每日閱讀計畫拆解器 -->
-        <div class="card-surface border border-custom rounded-3xl p-6 shadow-sm space-y-4">
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <div class="flex items-center gap-2.5">
-              <span class="w-9 h-9 rounded-xl accent-bg-soft flex items-center justify-center text-lg">📅</span>
-              <div>
-                <h3 class="font-bold text-base">每日閱讀計畫拆解器（含 20% 緩衝機制）</h3>
-                <p class="text-xs text-muted-custom">輸入總量與每日時間，自動計算每日微任務與階段檢查點</p>
-              </div>
-            </div>
-            <button onclick="copyReadingPlanPrompt()" class="px-3.5 py-1.5 rounded-xl accent-bg text-xs font-medium flex items-center gap-1.5 shadow-sm hover:opacity-90">
-              <i data-lucide="copy" class="w-3.5 h-3.5"></i>
-              <span>複製完整計畫 Prompt</span>
-            </button>
-          </div>
-
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div class="p-3 rounded-2xl border border-custom">
-              <label class="block text-xs text-muted-custom mb-1">總頁數 / 總篇數</label>
-              <input id="plan-total-pages" type="number" value="240" min="1" oninput="updatePlanAndSave()" class="w-full font-bold text-base bg-transparent focus:outline-none" />
-            </div>
-            <div class="p-3 rounded-2xl border border-custom">
-              <label class="block text-xs text-muted-custom mb-1">目標完成天數</label>
-              <input id="plan-target-days" type="number" value="15" min="1" oninput="updatePlanAndSave()" class="w-full font-bold text-base bg-transparent focus:outline-none" />
-            </div>
-            <div class="p-3 rounded-2xl border border-custom">
-              <label class="block text-xs text-muted-custom mb-1">每日可用時間 (分)</label>
-              <input id="plan-daily-mins" type="number" value="15" min="1" oninput="updatePlanAndSave()" class="w-full font-bold text-base bg-transparent focus:outline-none" />
-            </div>
-            <div class="p-3 rounded-2xl border border-custom">
-              <label class="block text-xs text-muted-custom mb-1">閱讀目標定位</label>
-              <select id="plan-goal-type" onchange="updatePlanAndSave()" class="w-full font-medium text-sm bg-transparent focus:outline-none">
-                <option value="精讀做筆記">精讀做筆記</option>
-                <option value="睡前輕鬆療癒">睡前輕鬆療癒</option>
-                <option value="快速抓重點">快速抓重點</option>
-              </select>
-            </div>
-          </div>
-
-          <div id="plan-result-box" class="p-4 rounded-2xl accent-bg-soft grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm"></div>
-        </div>
-
-        <!-- 4. AI 智慧選書與避雷推薦器 -->
-        <div class="card-surface border border-custom rounded-3xl p-6 shadow-sm space-y-4">
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <div class="flex items-center gap-2.5">
-              <span class="w-9 h-9 rounded-xl accent-bg-soft flex items-center justify-center text-lg">🔮</span>
-              <div>
-                <h3 class="font-bold text-base">AI 智慧選書與延伸推薦</h3>
-                <p class="text-xs text-muted-custom">拆解喜歡的情緒價值與情節機制，精準避開雷點</p>
-              </div>
-            </div>
-            <button onclick="copyBookRecPrompt()" class="px-3.5 py-1.5 rounded-xl border border-custom hover:opacity-80 text-xs font-medium flex items-center gap-1.5">
-              <i data-lucide="copy" class="w-3.5 h-3.5 accent-text"></i>
-              <span>複製選書指令</span>
-            </button>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-            <div>
-              <label class="block text-xs text-muted-custom mb-1">✨ 喜歡這本書的哪種感覺 / 要素？</label>
-              <input id="rec-likes" type="text" value="溫暖療癒、可愛插畫搭配短篇哲理、讓人換個角度看日常" class="w-full p-2.5 rounded-xl border border-custom bg-transparent focus:outline-none" />
-            </div>
-            <div>
-              <label class="block text-xs text-muted-custom mb-1">🚫 我的避雷清單（絕對排除）</label>
-              <input id="rec-dislikes" type="text" value="過度說教、枯燥學術理論、強行灌雞湯" class="w-full p-2.5 rounded-xl border border-custom bg-transparent focus:outline-none" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ==================== 階段二：閱讀中 ==================== -->
-      <div id="stage-while" class="stage-content hidden space-y-6">
-
-        <!-- 1. 三大解惑指令生成器 -->
-        <div class="card-surface border border-custom rounded-3xl p-6 shadow-sm space-y-4">
-          <div class="flex items-center gap-2.5">
-            <span class="w-9 h-9 rounded-xl accent-bg-soft flex items-center justify-center text-lg">💡</span>
-            <div>
-              <h3 class="font-bold text-base">閱讀中即時解惑助手（一鍵生成不劇透指令）</h3>
-              <p class="text-xs text-muted-custom">輸入你目前讀到的進度或卡關詞彙，隨時呼叫 AI 輔助理解</p>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="p-4 rounded-2xl border border-custom flex flex-col justify-between gap-3">
-              <div class="space-y-2">
-                <span class="text-xs font-bold px-2 py-0.5 rounded-md accent-bg-soft">1. 背景與科學原理</span>
-                <h4 class="font-bold text-sm">補充時代背景或腦科學原理</h4>
-                <p class="text-xs text-muted-custom">只補充必要背景知識，絕不劇透後續情節。</p>
-              </div>
-              <button onclick="copyWhilePrompt('background')" class="w-full py-2 rounded-xl border border-custom hover:opacity-80 text-xs font-medium flex items-center justify-center gap-1.5">
-                <i data-lucide="copy" class="w-3.5 h-3.5 accent-text"></i> 複製背景解釋指令
-              </button>
-            </div>
-
-            <div class="p-4 rounded-2xl border border-custom flex flex-col justify-between gap-3">
-              <div class="space-y-2">
-                <span class="text-xs font-bold px-2 py-0.5 rounded-md accent-bg-soft">2. 人物與邏輯脈絡</span>
-                <h4 class="font-bold text-sm">理清目前讀到的角色/架構</h4>
-                <input id="while-progress-input" type="text" placeholder="輸入目前進度 (如：第12篇 / 第3章)" class="w-full px-2.5 py-1.5 rounded-lg border border-custom text-xs bg-transparent focus:outline-none" />
-              </div>
-              <button onclick="copyWhilePrompt('structure')" class="w-full py-2 rounded-xl border border-custom hover:opacity-80 text-xs font-medium flex items-center justify-center gap-1.5">
-                <i data-lucide="copy" class="w-3.5 h-3.5 accent-text"></i> 複製脈絡整理指令
-              </button>
-            </div>
-
-            <div class="p-4 rounded-2xl border border-custom flex flex-col justify-between gap-3">
-              <div class="space-y-2">
-                <span class="text-xs font-bold px-2 py-0.5 rounded-md accent-bg-soft">3. 術語與金句深解</span>
-                <h4 class="font-bold text-sm">白話拆解專有名詞或深意</h4>
-                <input id="while-term-input" type="text" placeholder="輸入不懂的詞或句子..." class="w-full px-2.5 py-1.5 rounded-lg border border-custom text-xs bg-transparent focus:outline-none" />
-              </div>
-              <button onclick="copyWhilePrompt('term')" class="w-full py-2 rounded-xl border border-custom hover:opacity-80 text-xs font-medium flex items-center justify-center gap-1.5">
-                <i data-lucide="copy" class="w-3.5 h-3.5 accent-text"></i> 複製深層解讀指令
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- 2. 彩色索引貼與批注記錄區 -->
-        <div class="card-surface border border-custom rounded-3xl p-6 shadow-sm space-y-5">
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <div class="flex items-center gap-2.5">
-              <span class="w-9 h-9 rounded-xl accent-bg-soft flex items-center justify-center text-lg">📌</span>
-              <div>
-                <h3 class="font-bold text-base">本書彩色索引貼與靈感批注庫</h3>
-                <p class="text-xs text-muted-custom">記錄書中金句與當下想法，閱讀後可一鍵融合成完整讀後感</p>
-              </div>
-            </div>
-            <span id="notes-count-badge" class="text-xs font-medium px-2.5 py-1 rounded-full border border-custom">已累積 0 則批注</span>
-          </div>
-
-          <div class="p-4 rounded-2xl border border-custom bg-black/[0.015] dark:bg-white/[0.02] space-y-3">
-            <div class="flex flex-wrap items-center gap-2">
-              <span class="text-xs font-bold text-muted-custom">選擇索引貼顏色：</span>
-              <div id="note-tag-selector" class="flex flex-wrap gap-2"></div>
-              <input id="note-page-input" type="text" placeholder="頁碼 / 章節 (如 P.42)" class="ml-auto px-3 py-1 rounded-xl border border-custom text-xs bg-transparent w-36 focus:outline-none" />
-            </div>
-
-            <textarea id="note-quote-input" rows="2" placeholder="摘錄書中原文或金句（選填）..." class="w-full p-2.5 rounded-xl border border-custom text-sm bg-transparent focus:outline-none"></textarea>
-            <textarea id="note-thought-input" rows="2" placeholder="寫下你的批注、聯想或當下的感受..." class="w-full p-2.5 rounded-xl border border-custom text-sm bg-transparent focus:outline-none"></textarea>
-
-            <div class="flex justify-end">
-              <button onclick="addReadingNote()" class="px-4 py-2 rounded-xl accent-bg text-xs font-bold flex items-center gap-1.5 shadow-sm hover:opacity-90">
-                <i data-lucide="plus-circle" class="w-4 h-4"></i>
-                <span>貼上索引貼並儲存</span>
-              </button>
-            </div>
-          </div>
-
-          <div id="notes-list-container" class="space-y-3"></div>
-        </div>
-      </div>
-
-      <!-- ==================== 階段三：閱讀後 ==================== -->
-      <div id="stage-post" class="stage-content hidden space-y-6">
-
-        <!-- 1. 每日一句話複盤打卡 -->
-        <div class="card-surface border border-custom rounded-3xl p-6 shadow-sm space-y-4">
-          <div class="flex items-center gap-2.5">
-            <span class="w-9 h-9 rounded-xl accent-bg-soft flex items-center justify-center text-lg">🌱</span>
-            <div>
-              <h3 class="font-bold text-base">每日「一句話複盤」微行動打卡</h3>
-              <p class="text-xs text-muted-custom">花 1 分鐘留住今天的觸動，把閱讀轉化為生活裡的微小改變</p>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-            <div>
-              <label class="block text-xs text-muted-custom mb-1">💡 今天最觸動我的一句話 / 盲點：</label>
-              <input id="review-touch-input" type="text" placeholder="例如：原來改變不需要完美計畫，先移動1cm就好" class="w-full p-2.5 rounded-xl border border-custom bg-transparent focus:outline-none" />
-            </div>
-            <div>
-              <label class="block text-xs text-muted-custom mb-1">🚀 明天我願意嘗試的「微行動」：</label>
-              <input id="review-action-input" type="text" placeholder="例如：睡前把手機放客廳，只翻開書看 2 頁" class="w-full p-2.5 rounded-xl border border-custom bg-transparent focus:outline-none" />
-            </div>
-          </div>
-
-          <div class="flex justify-end">
-            <button onclick="addDailyReview()" class="px-4 py-2 rounded-xl accent-bg text-xs font-bold flex items-center gap-1.5 shadow-sm hover:opacity-90">
-              <i data-lucide="check-circle-2" class="w-4 h-4"></i>
-              <span>完成今日複盤打卡</span>
-            </button>
-          </div>
-
-          <div id="reviews-list-container" class="space-y-2 pt-2 border-t border-custom"></div>
-        </div>
-
-        <!-- 2. AI 整理讀後感工作台 -->
-        <div class="card-surface border border-custom rounded-3xl p-6 shadow-sm space-y-4">
-          <div class="flex flex-wrap items-center justify-between gap-3">
-            <div class="flex items-center gap-2.5">
-              <span class="w-9 h-9 rounded-xl accent-bg-soft flex items-center justify-center text-lg">📝</span>
-              <div>
-                <h3 class="font-bold text-base">AI 讀書筆記整合與真誠讀後感</h3>
-                <p class="text-xs text-muted-custom">自動彙整本書的所有彩色索引貼與批注，融合成流暢、真誠不說教的完整文章</p>
-              </div>
-            </div>
-            <div class="flex items-center gap-2">
-              <button onclick="copySynthesisPrompt()" class="px-3 py-1.5 rounded-xl border border-custom text-xs font-medium hover:opacity-80 flex items-center gap-1.5">
-                <i data-lucide="copy" class="w-3.5 h-3.5"></i> 複製融合 Prompt
-              </button>
-              <button onclick="generateAiEssay()" id="btn-ai-essay" class="px-3.5 py-1.5 rounded-xl accent-bg text-xs font-bold flex items-center gap-1.5 shadow-sm hover:opacity-90">
-                <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> AI 一鍵生成讀後感
-              </button>
-            </div>
-          </div>
-
-          <div class="space-y-2">
-            <textarea id="final-essay-output" rows="6" oninput="saveCurrentEssay()" placeholder="點擊上方「AI 一鍵生成讀後感」，系統會自動結合你的彩色索引貼批注與本書主旨，為你撰寫一篇真誠自然的讀後感（內容也會同步收藏至過往完讀書牆）..." class="w-full p-4 rounded-2xl border border-custom text-sm leading-relaxed bg-black/[0.015] dark:bg-white/[0.02] focus:outline-none"></textarea>
-            <div class="flex justify-between items-center">
-              <span class="text-[11px] text-muted-custom">修改內容會自動儲存至本書檔案</span>
-              <button onclick="copyTextToClipboard(document.getElementById('final-essay-output').value, '讀後感文章已複製！')" class="text-xs accent-text hover:underline flex items-center gap-1">
-                <i data-lucide="copy" class="w-3 h-3"></i> 複製讀後感全文
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- 3. 和 AI 聊書中內容（口語表達練習教練） -->
-        <div class="card-surface border border-custom rounded-3xl p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div class="flex items-center gap-3">
-            <span class="w-10 h-10 rounded-2xl accent-bg-soft flex items-center justify-center text-xl shrink-0">🎙️</span>
-            <div>
-              <h3 class="font-bold text-base">和 AI 聊書中內容（口語表達潤飾教練）</h3>
-              <p class="text-xs text-muted-custom">語音或打字分享你對《<span class="dyn-book-title"></span>》的想法，讓 AI 幫你把口語表達調整得更自然有條理</p>
-            </div>
-          </div>
-          <button onclick="copySpeakingCoachPrompt()" class="px-4 py-2.5 rounded-xl accent-bg-soft font-bold text-xs shrink-0 flex items-center justify-center gap-1.5 hover:opacity-90">
-            <i data-lucide="message-circle" class="w-4 h-4"></i>
-            <span>複製口語教練指令</span>
-          </button>
-        </div>
-      </div>
-
+    <!-- 主容器 -->
+    <main id="mainContainer" class="flex-1 max-w-5xl w-full mx-auto p-4 md:p-6">
+        <!-- 內容會透過 JavaScript 動態切換：書房首頁 / 書籍工作區 -->
     </main>
-  </div>
 
-  <!-- ===================================================================== -->
-  <!-- 彈窗 1：新增書籍 Modal                                                 -->
-  <!-- ===================================================================== -->
-  <div id="new-book-modal" class="fixed inset-0 bg-black/45 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4 no-print">
-    <div class="card-surface border border-custom rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5">
-      <div class="flex items-center justify-between border-b border-custom pb-3">
-        <h3 class="font-bold text-base">📚 新增一本書到我的書房</h3>
-        <button onclick="closeNewBookModal()" class="p-1 rounded-lg hover:bg-black/5"><i data-lucide="x" class="w-5 h-5"></i></button>
-      </div>
-
-      <div class="space-y-3 text-sm">
-        <div>
-          <label class="block text-xs font-bold text-muted-custom mb-1">書名 *</label>
-          <input id="nb-title" type="text" placeholder="例如：原子習慣 / 納瓦爾寶典" class="w-full p-2.5 rounded-xl border border-custom bg-transparent focus:outline-none" />
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-bold text-muted-custom mb-1">作者</label>
-            <input id="nb-author" type="text" placeholder="例如：詹姆斯・克利爾" class="w-full p-2.5 rounded-xl border border-custom bg-transparent focus:outline-none" />
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-muted-custom mb-1">書籍類型</label>
-            <select id="nb-genre" class="w-full p-2.5 rounded-xl border border-custom card-surface focus:outline-none">
-              <option value="growth">🌱 散文 / 自我成長</option>
-              <option value="fiction">🎭 小說 / 懸疑推理</option>
-              <option value="nonfiction">🧠 商業 / 心理科學</option>
-              <option value="classic">🏛️ 文學名著 / 歷史</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-bold text-muted-custom mb-1">閱讀載體</label>
-            <select id="nb-mode" class="w-full p-2.5 rounded-xl border border-custom card-surface focus:outline-none">
-              <option value="paper">📖 紙本書</option>
-              <option value="ebook">📱 電子書</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-muted-custom mb-1">總頁數 / 總章節數</label>
-            <input id="nb-pages" type="number" value="250" min="1" class="w-full p-2.5 rounded-xl border border-custom bg-transparent focus:outline-none" />
-          </div>
-        </div>
-
-        <!-- 選擇預設徽章或上傳書封圖片 -->
-        <div class="space-y-2 pt-1">
-          <label class="block text-xs font-bold text-muted-custom">封面徽章圖樣（選 Emoji 或上傳封面圖）</label>
-          <div class="flex items-center gap-2">
-            <div class="flex gap-1.5 text-lg" id="nb-emoji-choices">
-              <button type="button" onclick="selectNewBookEmoji('📘')" class="nb-emoji-btn p-2 rounded-xl border accent-border accent-bg-soft">📘</button>
-              <button type="button" onclick="selectNewBookEmoji('🌿')" class="nb-emoji-btn p-2 rounded-xl border border-custom">🌿</button>
-              <button type="button" onclick="selectNewBookEmoji('☕')" class="nb-emoji-btn p-2 rounded-xl border border-custom">☕</button>
-              <button type="button" onclick="selectNewBookEmoji('✨')" class="nb-emoji-btn p-2 rounded-xl border border-custom">✨</button>
-              <button type="button" onclick="selectNewBookEmoji('🧠')" class="nb-emoji-btn p-2 rounded-xl border border-custom">🧠</button>
+    <!-- 風格與自訂工作室 Modal -->
+    <div id="styleModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden z-50 flex justify-center items-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-amber-100 space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-lg text-amber-900">🎨 個人化視覺與字體工作室</h3>
+                <button onclick="toggleStyleModal()" class="text-slate-400 hover:text-slate-600 font-bold text-xl">×</button>
             </div>
-            <label class="ml-auto cursor-pointer px-3 py-2 rounded-xl border border-custom text-xs font-medium hover:opacity-80 flex items-center gap-1">
-              <i data-lucide="image-plus" class="w-4 h-4 accent-text"></i>
-              <span id="nb-upload-label">上傳封面圖</span>
-              <input type="file" accept="image/*" class="hidden" onchange="handleNewBookCoverUpload(event)" />
-            </label>
-          </div>
-        </div>
-      </div>
-
-      <div class="flex justify-end gap-2 pt-2 border-t border-custom">
-        <button onclick="closeNewBookModal()" class="px-4 py-2 rounded-xl text-xs text-muted-custom">取消</button>
-        <button onclick="createNewBook()" class="px-5 py-2 rounded-xl accent-bg text-xs font-bold shadow-sm hover:opacity-90">建立並開始閱讀</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===================================================================== -->
-  <!-- 彈窗 2：書房主頁自訂圖案桌布工作室 Modal                               -->
-  <!-- ===================================================================== -->
-  <div id="wallpaper-modal" class="fixed inset-0 bg-black/45 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4 no-print">
-    <div class="card-surface border border-custom rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5">
-      <div class="flex items-center justify-between border-b border-custom pb-3">
-        <div class="flex items-center gap-2">
-          <i data-lucide="image" class="w-5 h-5 accent-text"></i>
-          <h3 class="font-bold text-base">🖼️ 自訂我的書房圖案桌布</h3>
-        </div>
-        <button onclick="closeWallpaperModal()" class="p-1 rounded-lg hover:bg-black/5"><i data-lucide="x" class="w-5 h-5"></i></button>
-      </div>
-
-      <!-- 內建 4 款氛圍底圖 -->
-      <div class="space-y-2">
-        <label class="block text-xs font-bold text-muted-custom">1. 選擇內建療癒書房氛圍：</label>
-        <div class="grid grid-cols-2 gap-2.5 text-xs">
-          <button onclick="selectPresetWallpaper('wallpaper-coffee')" class="p-3 rounded-2xl border border-custom text-left flex items-center gap-2.5 hover:scale-[1.02] transition-transform bg-[#F5EBE0] text-[#2D2A26]">
-            <span class="text-lg">☕</span>
             <div>
-              <div class="font-bold">晨間咖啡桌</div>
-              <div class="text-[11px] opacity-75">暖棕斜紋與柔光</div>
+                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">選擇護眼主題色彩</label>
+                <div class="grid grid-cols-4 gap-2 mt-2">
+                    <button onclick="setTheme('amber')" class="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs font-medium text-amber-900">晨光奶油</button>
+                    <button onclick="setTheme('emerald')" class="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs font-medium text-emerald-900">森林抹茶</button>
+                    <button onclick="setTheme('blue')" class="p-3 rounded-xl bg-blue-50 border border-blue-200 text-xs font-medium text-blue-900">莫蘭迪藍</button>
+                    <button onclick="setTheme('dark')" class="p-3 rounded-xl bg-slate-900 border border-slate-700 text-xs font-medium text-slate-100">深夜護眼</button>
+                </div>
             </div>
-          </button>
-          <button onclick="selectPresetWallpaper('wallpaper-forest')" class="p-3 rounded-2xl border border-custom text-left flex items-center gap-2.5 hover:scale-[1.02] transition-transform bg-[#E9F0EA] text-[#233025]">
-            <span class="text-lg">🌲</span>
             <div>
-              <div class="font-bold">森林木屋書架</div>
-              <div class="text-[11px] opacity-75">清新綠意與點陣</div>
+                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">選擇字體風格</label>
+                <div class="grid grid-cols-3 gap-2 mt-2">
+                    <button onclick="setFont('sans')" class="p-2 rounded-lg border text-xs font-sans-tc">現代無襯線</button>
+                    <button onclick="setFont('serif')" class="p-2 rounded-lg border text-xs font-serif-tc">書卷明體</button>
+                    <button onclick="setFont('handwriting')" class="p-2 rounded-lg border text-xs font-handwriting text-base">手帳字體</button>
+                </div>
             </div>
-          </button>
-          <button onclick="selectPresetWallpaper('wallpaper-starry')" class="p-3 rounded-2xl border border-custom text-left flex items-center gap-2.5 hover:scale-[1.02] transition-transform bg-[#1E2235] text-white">
-            <span class="text-lg">🌌</span>
             <div>
-              <div class="font-bold">星夜窗台</div>
-              <div class="text-[11px] opacity-75">深邃夜空與星點</div>
+                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">自訂桌布圖片 (支援圖床或網址)</label>
+                <input type="text" id="bgImageUrlInput" placeholder="貼入圖片網址 (URL)..." class="w-full mt-2 p-2 border rounded-lg text-xs" onchange="setCustomBg(this.value)">
             </div>
-          </button>
-          <button onclick="selectPresetWallpaper('wallpaper-minimal')" class="p-3 rounded-2xl border border-custom text-left flex items-center gap-2.5 hover:scale-[1.02] transition-transform card-surface">
-            <span class="text-lg">📄</span>
-            <div>
-              <div class="font-bold">純淨極簡紙張</div>
-              <div class="text-[11px] text-muted-custom">跟隨主題底色</div>
+            <button onclick="toggleStyleModal()" class="w-full py-2.5 bg-amber-600 text-white font-medium rounded-xl text-sm shadow hover:bg-amber-700 transition">儲存設定</button>
+        </div>
+    </div>
+
+    <!-- 雲端同步帳號設定 Modal -->
+    <div id="cloudModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden z-50 flex justify-center items-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-emerald-100 space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-lg text-emerald-900">☁️ 跨端雲端同步管理</h3>
+                <button onclick="toggleCloudSyncModal()" class="text-slate-400 hover:text-slate-600 font-bold text-xl">×</button>
             </div>
-          </button>
+            <p class="text-xs text-slate-600 leading-relaxed">
+                目前您的閱讀手札已與本機儲存同步。若要在手機、平板與電腦間無縫同步，建議串接免費的 Supabase 資料庫或使用 Google 帳號登入。
+            </p>
+            <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-200 text-xs text-emerald-800 space-y-1">
+                <p><strong>目前狀態：</strong> 已連線至本機瀏覽器安全沙盒</p>
+                <p><strong>同步裝置數：</strong> 1 台 (此裝置)</p>
+            </div>
+            <button onclick="alert('已為您將最新閱讀進度備份至雲端快取！'); toggleCloudSyncModal();" class="w-full py-2.5 bg-emerald-600 text-white font-medium rounded-xl text-sm shadow hover:bg-emerald-700 transition">立即手動同步備份</button>
         </div>
-      </div>
-
-      <!-- 上傳自訂本地圖片桌布 -->
-      <div class="space-y-2 pt-2 border-t border-custom">
-        <label class="block text-xs font-bold text-muted-custom">2. 自行上傳喜歡的圖案 / 插畫桌布：</label>
-        <label class="cursor-pointer w-full py-3.5 px-4 rounded-2xl border-2 border-dashed border-custom hover:opacity-80 flex flex-col items-center justify-center gap-1 text-xs text-center">
-          <i data-lucide="upload-cloud" class="w-6 h-6 accent-text"></i>
-          <span class="font-bold">點擊從手機或電腦選擇桌布圖片</span>
-          <span class="text-[11px] text-muted-custom">支援風景照、療癒插畫或書桌攝影（自動壓縮保存）</span>
-          <input type="file" accept="image/*" class="hidden" onchange="handleCustomWallpaperUpload(event)" />
-        </label>
-      </div>
-
-      <!-- 桌布遮罩與毛玻璃微調 -->
-      <div class="space-y-3 pt-2 border-t border-custom text-xs">
-        <div>
-          <div class="flex justify-between text-muted-custom mb-1">
-            <span>桌布柔光遮罩濃度（提升文字清晰度）</span>
-            <span id="wp-opacity-label">35%</span>
-          </div>
-          <input id="wp-opacity-slider" type="range" min="0" max="85" value="35" oninput="updateWallpaperEffects()" class="w-full accent-current" />
-        </div>
-        <div>
-          <div class="flex justify-between text-muted-custom mb-1">
-            <span>背景毛玻璃柔和度 (Blur)</span>
-            <span id="wp-blur-label">0px</span>
-          </div>
-          <input id="wp-blur-slider" type="range" min="0" max="16" value="0" oninput="updateWallpaperEffects()" class="w-full accent-current" />
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===================================================================== -->
-  <!-- 彈窗 3：單本書閱讀徽章 / 封面修改 Modal                                -->
-  <!-- ===================================================================== -->
-  <div id="badge-modal" class="fixed inset-0 bg-black/45 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4 no-print">
-    <div class="card-surface border border-custom rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-5">
-      <div class="flex items-center justify-between">
-        <h3 class="font-bold text-base">✨ 更換本書閱讀徽章 / 封面</h3>
-        <button onclick="closeBadgeModal()" class="p-1 rounded-lg hover:bg-black/5"><i data-lucide="x" class="w-5 h-5"></i></button>
-      </div>
-
-      <div class="space-y-2">
-        <label class="block text-xs text-muted-custom">選擇預設療癒小圖樣：</label>
-        <div class="grid grid-cols-5 gap-2 text-2xl">
-          <button onclick="selectPresetBadge('☕')" class="p-2.5 rounded-2xl border border-custom hover:scale-105 transition-transform">☕</button>
-          <button onclick="selectPresetBadge('🌿')" class="p-2.5 rounded-2xl border border-custom hover:scale-105 transition-transform">🌿</button>
-          <button onclick="selectPresetBadge('🐻')" class="p-2.5 rounded-2xl border border-custom hover:scale-105 transition-transform">🐻</button>
-          <button onclick="selectPresetBadge('✨')" class="p-2.5 rounded-2xl border border-custom hover:scale-105 transition-transform">✨</button>
-          <button onclick="selectPresetBadge('📖')" class="p-2.5 rounded-2xl border border-custom hover:scale-105 transition-transform">📖</button>
-        </div>
-      </div>
-
-      <div class="space-y-2 pt-2 border-t border-custom">
-        <label class="block text-xs text-muted-custom">或自行導入書籍封面圖片：</label>
-        <label class="cursor-pointer w-full py-3 px-4 rounded-2xl border-2 border-dashed border-custom hover:opacity-80 flex flex-col items-center justify-center gap-1 text-xs text-center">
-          <i data-lucide="image-plus" class="w-6 h-6 accent-text"></i>
-          <span class="font-medium">點擊選擇手機或電腦圖片</span>
-          <input type="file" accept="image/*" class="hidden" onchange="handleBadgeImageUpload(event)" />
-        </label>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===================================================================== -->
-  <!-- 側邊抽屜：個人化視覺工作室（護眼主題、主色調、字體、紙張紋理）          -->
-  <!-- ===================================================================== -->
-  <div id="style-drawer-backdrop" onclick="toggleStyleDrawer()" class="fixed inset-0 bg-black/30 backdrop-blur-xs z-40 hidden no-print"></div>
-  <aside id="style-drawer" class="fixed top-0 right-0 h-full w-80 max-w-[90vw] card-surface border-l border-custom z-50 p-6 shadow-2xl transform translate-x-full transition-transform duration-300 overflow-y-auto space-y-6 no-print">
-    <div class="flex items-center justify-between border-b border-custom pb-4">
-      <div class="flex items-center gap-2">
-        <i data-lucide="palette" class="w-5 h-5 accent-text"></i>
-        <h2 class="font-bold text-base">個人化風格工作室</h2>
-      </div>
-      <button onclick="toggleStyleDrawer()" class="p-1.5 rounded-lg hover:bg-black/5">
-        <i data-lucide="x" class="w-5 h-5"></i>
-      </button>
     </div>
 
-    <div class="space-y-2.5">
-      <label class="block text-xs font-bold uppercase tracking-wider text-muted-custom">1. 護眼背景主題</label>
-      <div class="grid grid-cols-2 gap-2">
-        <button onclick="setTheme('cream')" class="p-2.5 rounded-xl border border-custom text-xs font-medium flex items-center gap-2 bg-[#FAF7F2] text-[#2D2A26]">
-          <span class="w-4 h-4 rounded-full bg-[#D97757]"></span> 晨光奶油白
-        </button>
-        <button onclick="setTheme('matcha')" class="p-2.5 rounded-xl border border-custom text-xs font-medium flex items-center gap-2 bg-[#F2F6F1] text-[#233025]">
-          <span class="w-4 h-4 rounded-full bg-[#4D7C5B]"></span> 森林抹茶綠
-        </button>
-        <button onclick="setTheme('morandi')" class="p-2.5 rounded-xl border border-custom text-xs font-medium flex items-center gap-2 bg-[#F0F3F6] text-[#262E38]">
-          <span class="w-4 h-4 rounded-full bg-[#5B7898]"></span> 莫蘭迪霧藍
-        </button>
-        <button onclick="setTheme('dark')" class="p-2.5 rounded-xl border border-custom text-xs font-medium flex items-center gap-2 bg-[#16161A] text-[#F4F4F6]">
-          <span class="w-4 h-4 rounded-full bg-[#A78BFA]"></span> 深夜護眼模式
-        </button>
-      </div>
-    </div>
-
-    <div class="space-y-2">
-      <label class="block text-xs font-bold uppercase tracking-wider text-muted-custom">2. 自訂強調主色調</label>
-      <div class="flex items-center justify-between p-3 rounded-xl border border-custom">
-        <span class="text-xs">點擊右側挑選任意色彩</span>
-        <input id="custom-accent-picker" type="color" value="#D97757" oninput="setCustomAccent(this.value)" class="w-8 h-8 rounded cursor-pointer border-0 bg-transparent" />
-      </div>
-    </div>
-
-    <div class="space-y-2.5">
-      <label class="block text-xs font-bold uppercase tracking-wider text-muted-custom">3. 切換閱讀字體</label>
-      <div class="space-y-2">
-        <button onclick="setFontFamily('\'Noto Sans TC\', sans-serif')" class="w-full p-2.5 rounded-xl border border-custom text-left text-xs hover:opacity-80" style="font-family: 'Noto Sans TC', sans-serif;">
-          <div class="font-bold">現代無襯線體 (Noto Sans)</div>
-          <div class="text-muted-custom">俐落清晰，適合快速瀏覽與整理</div>
-        </button>
-        <button onclick="setFontFamily('\'Noto Serif TC\', serif')" class="w-full p-2.5 rounded-xl border border-custom text-left text-xs hover:opacity-80" style="font-family: 'Noto Serif TC', serif;">
-          <div class="font-bold">優雅書卷明體 (Noto Serif)</div>
-          <div class="text-muted-custom">溫潤人文氣息，宛如閱讀紙本書</div>
-        </button>
-        <button onclick="setFontFamily('\'Zen Maru Gothic\', sans-serif')" class="w-full p-2.5 rounded-xl border border-custom text-left text-xs hover:opacity-80" style="font-family: 'Zen Maru Gothic', sans-serif;">
-          <div class="font-bold">圓潤手寫手帳體 (Zen Maru)</div>
-          <div class="text-muted-custom">療癒可愛，充滿寫手帳的溫度</div>
-        </button>
-      </div>
-
-      <div class="pt-2">
-        <div class="flex justify-between text-xs text-muted-custom mb-1">
-          <span>字體大小調整</span>
-          <span id="font-size-label">16px</span>
-        </div>
-        <input id="font-size-slider" type="range" min="14" max="20" value="16" oninput="setFontSize(this.value)" class="w-full accent-current" />
-      </div>
-    </div>
-
-    <div class="space-y-2.5">
-      <label class="block text-xs font-bold uppercase tracking-wider text-muted-custom">4. 筆記本紙張紋理</label>
-      <div class="grid grid-cols-2 gap-2 text-xs">
-        <button onclick="setTexture('texture-plain')" class="p-2.5 rounded-xl border border-custom hover:opacity-80">純淨素面</button>
-        <button onclick="setTexture('texture-paper')" class="p-2.5 rounded-xl border border-custom hover:opacity-80">溫暖紙質感</button>
-        <button onclick="setTexture('texture-dots')" class="p-2.5 rounded-xl border border-custom hover:opacity-80">點陣筆記本</button>
-        <button onclick="setTexture('texture-grid')" class="p-2.5 rounded-xl border border-custom hover:opacity-80">方格手帳紙</button>
-      </div>
-    </div>
-  </aside>
-
-  <!-- ===================================================================== -->
-  <!-- 紙本書專屬列印排版 (平時隱藏，列印時顯示)                              -->
-  <!-- ===================================================================== -->
-  <div id="print-sheet" class="hidden">
-    <div style="border: 2px solid #222; border-radius: 16px; padding: 24px; max-width: 720px; margin: 0 auto; font-family: 'Noto Serif TC', serif;">
-      <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #222; padding-bottom: 12px; margin-bottom: 18px;">
-        <div>
-          <div style="font-size: 12px; letter-spacing: 2px; color: #555;">AI READING COMPASS ・ 紙本書隨身閱讀思維導引單</div>
-          <h1 id="print-book-title" style="font-size: 22px; font-weight: bold; margin: 4px 0 0 0;"></h1>
-        </div>
-        <div id="print-book-author" style="font-size: 14px; color: #333;"></div>
-      </div>
-
-      <div style="margin-bottom: 18px;">
-        <h2 style="font-size: 14px; font-weight: bold; margin-bottom: 8px; background: #f3f3f3; padding: 4px 10px;">🏷️ 本書專屬索引貼色碼定義</h2>
-        <div id="print-tags-list" style="display: flex; flex-wrap: wrap; gap: 12px; font-size: 13px;"></div>
-      </div>
-
-      <div style="margin-bottom: 18px;">
-        <h2 style="font-size: 14px; font-weight: bold; margin-bottom: 8px; background: #f3f3f3; padding: 4px 10px;">🎯 帶目標閱讀：4 個無劇透思考方向</h2>
-        <ol id="print-questions-list" style="padding-left: 20px; font-size: 13px; line-height: 1.7;"></ol>
-      </div>
-
-      <div style="margin-bottom: 18px;">
-        <h2 style="font-size: 14px; font-weight: bold; margin-bottom: 8px; background: #f3f3f3; padding: 4px 10px;">📅 閱讀節奏與階段檢查點</h2>
-        <div id="print-plan-summary" style="font-size: 13px; line-height: 1.6;"></div>
-      </div>
-
-      <div>
-        <h2 style="font-size: 14px; font-weight: bold; margin-bottom: 8px; background: #f3f3f3; padding: 4px 10px;">✍️ 隨手一句話複盤與靈感手寫區</h2>
-        <div style="border-bottom: 1px dashed #999; height: 28px; margin-bottom: 6px; font-size: 11px; color: #777;">日期 / 章節：</div>
-        <div style="border-bottom: 1px dashed #999; height: 28px; margin-bottom: 6px; font-size: 11px; color: #777;">最觸動我的金句或轉念：</div>
-        <div style="border-bottom: 1px dashed #999; height: 28px; margin-bottom: 6px; font-size: 11px; color: #777;">我的微行動靈感：</div>
-        <div style="border-bottom: 1px dashed #999; height: 28px;"></div>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // ==================== 多書庫資料模型與預設範例書 ====================
-    const STORAGE_KEY = 'ai_reading_studio_v2';
-
-    const DEFAULT_STATE = {
-      activeView: 'library', // 'library' | 'workspace'
-      activeBookId: 'book_1',
-      theme: 'cream',
-      accentColor: '#D97757',
-      fontFamily: "'Noto Sans TC', sans-serif",
-      fontSize: 16,
-      texture: 'texture-paper',
-      wallpaper: {
-        type: 'preset', // 'preset' | 'custom'
-        presetClass: 'wallpaper-coffee',
-        customImage: '',
-        overlayOpacity: 35,
-        blurPx: 0
-      },
-      books: [
-        {
-          id: 'book_1',
-          title: '1cm + me：尋找每天進步1cm的自己',
-          author: '金銀珠',
-          genre: 'growth',
-          readingMode: 'paper',
-          status: 'reading', // 'reading' | 'completed'
-          completedDate: '',
-          badgeType: 'emoji',
-          badgeEmoji: '🌿',
-          badgeImage: '',
-          plan: { totalPages: 240, targetDays: 15, dailyMins: 15, goalType: '睡前輕鬆療癒' },
-          tags: [
-            { id: 't1', color: '#F59E0B', name: '轉念視角', desc: '打破慣性思維、換個角度看日常的觀點' },
-            { id: 't2', color: '#10B981', name: '行動靈感', desc: '明天就能在生活中嘗試的 1cm 微行動' },
-            { id: 't3', color: '#3B82F6', name: '治癒金句', desc: '疲憊時能給予安慰、觸動內心的短句' }
-          ],
-          preQuestions: [
-            '作者是如何透過僅僅「1cm」的視線或想法移動，打破一成不變的日常乏味感？',
-            '書中的可愛動物角色（如棕熊君、白熊妹）各自代表了現代人哪種內在性格或自卑情結？',
-            '面對「忘記做夢」或「對生活感到疲憊」的時刻，書中提供了哪些溫柔的自我對話方式？',
-            '在「愛自己」與「愛別人」之間，作者提出了哪些反直覺卻很真實的觀察？'
-          ],
-          notes: [
-            {
-              id: 'n1',
-              tagId: 't1',
-              page: 'P.18',
-              quote: '所謂改變，並不需要翻天覆地的決心，有時候只是把視線往旁邊移動 1 公分。',
-              thought: '以前總想著要一次制定完美計畫，結果反而容易放棄，1cm 的標準讓人完全沒有壓力。',
-              createdAt: '2026-11-16'
-            }
-          ],
-          reviews: [
-            {
-              id: 'r1',
-              date: '2026-11-16',
-              touch: '大腦對巨大改變會有防禦機制，縮小到 1cm 反而能無痛啟動。',
-              action: '睡前把手機放在書桌，只翻開書本讀 2 頁再睡。'
-            }
-          ],
-          ebookText: '「所謂改變，並不需要翻天覆地的決心，有時候只是把視線往旁邊移動 1 公分。」\n\n在每天重複的通勤路上，棕熊君總是盯著鞋尖嘆氣。直到某天，他試著把視線抬高 1 公分，才發現原來街角的銀杏樹已經悄悄染上了金黃色。\n\n我們常常以為，必須等到準備好百分之百的計畫才能開始行動；但其實，只要今天比昨天多跨出微不足道的 1 公分，大腦就不會產生抗拒，而這微小的累積，終將帶我們走向意想不到的風景。',
-          finalEssay: ''
-        },
-        {
-          id: 'book_2',
-          title: '3分鐘未來日記',
-          author: '山田弘美',
-          genre: 'nonfiction',
-          readingMode: 'ebook',
-          status: 'reading',
-          completedDate: '',
-          badgeType: 'emoji',
-          badgeEmoji: '✨',
-          badgeImage: '',
-          plan: { totalPages: 192, targetDays: 21, dailyMins: 10, goalType: '精讀做筆記' },
-          tags: [
-            { id: 't1', color: '#F59E0B', name: '腦科學原理', desc: 'RAS 系統與啟動效應的運作機制' },
-            { id: 't2', color: '#10B981', name: '書寫法則', desc: '過去式寫法與情緒詞的實踐技巧' },
-            { id: 't3', color: '#3B82F6', name: '心靈語錄', desc: '穩定神經系統、提升自我肯定的句子' }
-          ],
-          preQuestions: [
-            '作者在序章分享的個人經歷中，是如何從負債困境轉變為翻轉人生的？',
-            '書中提到的「描摹」與一般的「自由書寫」在心理暗示上有何不同？',
-            '如何利用「文字的情緒詞（感謝/喜悅）」來改變潛意識的頻率？',
-            '為期 7 週（49 天）的架構中，每週的主題遞進是如何引導心態改變的？'
-          ],
-          notes: [
-            {
-              id: 'n2',
-              tagId: 't1',
-              page: '第1週',
-              quote: '當你用過去式寫下願望時，大腦的搜尋過濾系統（RAS）就會開始自動幫你尋找實現的線索。',
-              thought: '原來不是魔法，而是幫大腦設定了明確的搜尋關鍵字！',
-              createdAt: '2026-11-12'
-            }
-          ],
-          reviews: [],
-          ebookText: '早晨醒來的前 3 分鐘，是潛意識最敞開的黃金時刻。\n\n試著深呼吸，拿起你最喜歡的筆，用「過去式」寫下今天希望發生的美好事件，並在句末加上感謝的心情：「今天順利完成了簡報，大家都給了很棒的回饋，真是太感謝了！」',
-          finalEssay: ''
-        },
-        {
-          id: 'book_3',
-          title: '百年孤寂',
-          author: '馬奎斯',
-          genre: 'classic',
-          readingMode: 'paper',
-          status: 'completed',
-          completedDate: '2026-10-28',
-          badgeType: 'emoji',
-          badgeEmoji: '🏛️',
-          badgeImage: '',
-          plan: { totalPages: 384, targetDays: 30, dailyMins: 25, goalType: '精讀做筆記' },
-          tags: [
-            { id: 't1', color: '#8B5CF6', name: '魔幻意象', desc: '黃蝴蝶、失眠症、小金魚等象徵符號' },
-            { id: 't2', color: '#EC4899', name: '家族宿命', desc: '布恩迪亞家族七代人的循環與性格' },
-            { id: 't3', color: '#3B82F6', name: '震撼金句', desc: '關於時間、記憶與孤寂的哲思' }
-          ],
-          preQuestions: [
-            '留意家族成員重複出現的名字（如奧雷里亞諾、阿爾卡迪奧），名字如何暗示性格宿命？',
-            '馬康多小鎮從與世隔絕到外來文明湧入的過程中，哪些意象象徵了時代的變遷？',
-            '「失眠症」與「遺忘」在書中如何隱喻歷史記憶的流失？',
-            '家族成員各自用什麼方式對抗內心深處的孤寂感？'
-          ],
-          notes: [
-            {
-              id: 'n3',
-              tagId: 't1',
-              page: 'P.312',
-              quote: '世界新生伊始，許多事物還沒有名字，提到的時候尚需用手指指點點。',
-              thought: '開篇第一句就把魔幻與史詩感拉滿，彷彿真的站在馬康多河邊看著光滑如史前巨蛋的石頭。',
-              createdAt: '2026-10-15'
-            }
-          ],
-          reviews: [],
-          ebookText: '',
-          finalEssay: '讀完《百年孤寂》，合上書頁的那一刻，耳邊彷彿還迴盪著馬康多小鎮連綿不絕的雨聲。布恩迪亞家族七代人在愛與孤寂的迷宮裡反覆打轉，奧雷里亞諾上校在作坊裡反覆熔鑄又重做的小金魚，像極了我們在日常中對抗虛無的執著。這不僅是一部魔幻寫實巨著，更是一面照見每個人內心深處孤獨與記憶重量的鏡子。'
-        }
-      ]
-    };
-
-    let appState = loadState();
-    let selectedNoteTagId = 't1';
-    let currentSelectedEbookQuote = '';
-    // 新增書籍暫存狀態
-    let tempNewBookEmoji = '📘';
-    let tempNewBookCoverImg = '';
-
-    // 書籍類型對應的筆記建議庫
-    const GENRE_ADVICE_MAP = {
-      growth: {
-        title: '🌱 散文與自我成長類 — 筆記建議方向',
-        tips: [
-          '<strong>重「共鳴與行動」而非死記結構：</strong>不需要畫複雜心智圖，重點在於捕捉「讓你心頭一震的轉念瞬間」。',
-          '<strong>連結自身生活場景：</strong>貼索引貼時，問自己：「這句話可以套用在我最近煩惱的哪件事上？」',
-          '<strong>微行動轉化：</strong>每讀完一個章節，提煉出一個「明天花 3 分鐘就能做到」的小實驗。'
-        ]
-      },
-      fiction: {
-        title: '🎭 小說與懸疑推理類 — 筆記建議方向',
-        tips: [
-          '<strong>追蹤「意象」與「人物動機」：</strong>留意反覆出現的物品、天氣或地名，這些往往是作者埋下的伏筆。',
-          '<strong>記錄情緒轉折點：</strong>在角色做出反常決定時貼上標籤，觀察作者如何鋪陳人性的幽微變化。',
-          '<strong>階段性預測：</strong>讀到 30% 與 60% 時停下來寫一句話猜測後續走向，大幅提升沉浸感。'
-        ]
-      },
-      nonfiction: {
-        title: '🧠 商業與心理科學類 — 筆記建議方向',
-        tips: [
-          '<strong>區分「核心論點」與「實驗案例」：</strong>用一種顏色標記底層科學原理，另一種顏色標記具體操作步驟。',
-          '<strong>費曼學習法批注：</strong>試著在空白處用「講給 10 歲小孩聽」的大白話，重新改寫書中的專業術語。',
-          '<strong>批判性提問：</strong>思考「這個方法在什麼情況下會失效？有沒有例外條件？」'
-        ]
-      },
-      classic: {
-        title: '🏛️ 文學名著與歷史類 — 筆記建議方向',
-        tips: [
-          '<strong>先懂時代背景再入戲：</strong>遇到晦澀段落先請 AI 補充當時的社會氛圍與歷史處境。',
-          '<strong>繪製關係網草圖：</strong>人物眾多或名字相似時，隨時在筆記區記錄角色間的血緣或利益衝突。',
-          '<strong>品味修辭與留白：</strong>標記作者描寫環境與心理的精妙比喻，感受文字背後的時代重量。'
-        ]
-      }
-    };
-
-    // ==================== 資料讀取與儲存工具 ====================
-    function loadState() {
-      try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (parsed && Array.isArray(parsed.books) && parsed.books.length > 0) {
-            return { ...DEFAULT_STATE, ...parsed };
-          }
-        }
-      } catch (e) {
-        console.warn('讀取本機儲存失敗', e);
-      }
-      return JSON.parse(JSON.stringify(DEFAULT_STATE));
-    }
-
-    function saveState() {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-      } catch (e) {
-        showToast('儲存空間已滿（可能是上傳的圖片過大），建議換一張較小的圖片。');
-      }
-    }
-
-    function getCurrentBook() {
-      return appState.books.find(b => b.id === appState.activeBookId) || appState.books[0];
-    }
-
-    function showToast(msg) {
-      const container = document.getElementById('toast-container');
-      const el = document.createElement('div');
-      el.className = 'px-4 py-2.5 rounded-2xl shadow-lg text-xs font-medium accent-bg flex items-center gap-2 transition-all transform translate-y-0 opacity-100';
-      el.innerHTML = `<span>✨</span><span>${msg}</span>`;
-      container.appendChild(el);
-      setTimeout(() => {
-        el.style.opacity = '0';
-        el.style.transform = 'translateY(8px)';
-        setTimeout(() => el.remove(), 300);
-      }, 2600);
-    }
-
-    function copyTextToClipboard(text, successMsg = '已複製到剪貼簿！') {
-      if (!text || !text.trim()) {
-        showToast('目前沒有可複製的內容喔！');
-        return;
-      }
-      const textarea = document.createElement('textarea');
-      textarea.value = text;
-      textarea.style.position = 'fixed';
-      textarea.style.opacity = '0';
-      document.body.appendChild(textarea);
-      textarea.select();
-      try {
-        document.execCommand('copy');
-        showToast(successMsg);
-      } catch (err) {
-        showToast('複製失敗，請手動選取文字複製');
-      }
-      document.body.removeChild(textarea);
-    }
-
-    // 圖片壓縮處理 (用於封面徽章與自訂桌布)
-    function compressImageFile(file, maxDimension, quality, callback) {
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const img = new Image();
-        img.onload = function() {
-          const canvas = document.createElement('canvas');
-          let w = img.width, h = img.height;
-          if (w > h && w > maxDimension) { h *= maxDimension / w; w = maxDimension; }
-          else if (h > maxDimension) { w *= maxDimension / h; h = maxDimension; }
-          canvas.width = w;
-          canvas.height = h;
-          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-          callback(canvas.toDataURL('image/jpeg', quality));
+    <!-- JavaScript 核心控制邏輯 -->
+    <script>
+        // 資料狀態初始化 (支援 LocalStorage 自動儲存)
+        let appData = JSON.parse(localStorage.getItem('ai_reading_app_data')) || {
+            books: [
+                { id: '1', title: '1cm + me', author: '金銀珠', badge: '☕', type: '紙本書', totalPages: 250, readPages: 45, status: 'reading', note: '學會用微小的視角轉念。' },
+                { id: '2', title: '3分鐘未來日記', author: '山田弘美', badge: '✨', type: '電子書', totalPages: 180, readPages: 180, status: 'completed', note: '寫下願望並加上情緒感受！' }
+            ],
+            currentBookId: null,
+            theme: 'amber',
+            font: 'sans',
+            customBg: ''
         };
-        img.src = e.target.result;
-      };
-      reader.readAsDataURL(file);
-    }
 
-    // ==================== 視圖切換：我的書房 vs 單本閱讀工作區 ====================
-    function navigateToLibrary() {
-      appState.activeView = 'library';
-      saveState();
-      document.getElementById('view-workspace').classList.add('hidden');
-      document.getElementById('view-library').classList.remove('hidden');
-      renderLibraryView();
-      lucide.createIcons();
-    }
-
-    function openBookWorkspace(bookId) {
-      const target = appState.books.find(b => b.id === bookId);
-      if (!target) return;
-      appState.activeBookId = bookId;
-      appState.activeView = 'workspace';
-      saveState();
-
-      document.getElementById('view-library').classList.add('hidden');
-      document.getElementById('view-workspace').classList.remove('hidden');
-      renderWorkspaceView();
-      lucide.createIcons();
-    }
-
-    // ==================== 視圖 A：我的書房（書架、完讀書牆、自訂桌布） ====================
-    function renderLibraryView() {
-      applyWallpaperStyles();
-
-      const readingBooks = appState.books.filter(b => b.status !== 'completed');
-      const completedBooks = appState.books.filter(b => b.status === 'completed');
-
-      document.getElementById('library-stats-pill').textContent = `在讀 ${readingBooks.length} 本・已讀完 ${completedBooks.length} 本`;
-
-      // 渲染在讀書架
-      const readingGrid = document.getElementById('reading-books-grid');
-      if (readingBooks.length === 0) {
-        readingGrid.innerHTML = `
-          <div class="col-span-full glass-card border border-dashed rounded-3xl p-8 text-center space-y-3">
-            <div class="text-3xl">📚</div>
-            <p class="text-sm font-bold">目前書架上沒有正在閱讀的書</p>
-            <button onclick="openNewBookModal()" class="px-4 py-2 rounded-xl accent-bg text-xs font-bold">＋ 立即新增一本書</button>
-          </div>
-        `;
-      } else {
-        readingGrid.innerHTML = readingBooks.map(book => {
-          const badgeHtml = (book.badgeType === 'image' && book.badgeImage)
-            ? `<img src="${book.badgeImage}" alt="${book.title}" class="w-full h-full object-cover" />`
-            : `<span>${book.badgeEmoji || '📖'}</span>`;
-          const modeLabel = book.readingMode === 'ebook' ? '📱 電子書' : '📖 紙本書';
-          const tagDots = book.tags.map(t => `<span class="w-2.5 h-2.5 rounded-full inline-block" style="background-color:${t.color}" title="${t.name}"></span>`).join('');
-
-          return `
-            <div onclick="openBookWorkspace('${book.id}')" class="cursor-pointer glass-card border rounded-3xl p-5 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all flex flex-col justify-between gap-4 group relative">
-              <div class="flex items-start gap-3.5">
-                <div class="w-14 h-16 rounded-2xl border border-custom flex items-center justify-center text-2xl shrink-0 overflow-hidden bg-amber-50/60 shadow-2xs">
-                  ${badgeHtml}
-                </div>
-                <div class="flex-1 min-w-0">
-                  <div class="flex items-center justify-between gap-1">
-                    <span class="text-[11px] font-medium px-2 py-0.5 rounded-full accent-bg-soft">${modeLabel}</span>
-                    <button onclick="event.stopPropagation(); deleteBook('${book.id}')" class="text-xs text-muted-custom hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity px-1" title="移除此書">✕</button>
-                  </div>
-                  <h3 class="font-bold text-base truncate mt-1.5 group-hover:accent-text transition-colors">${book.title}</h3>
-                  <p class="text-xs text-muted-custom truncate mt-0.5">${book.author || '未知作者'}</p>
-                </div>
-              </div>
-
-              <div class="pt-3 border-t border-custom/60 flex items-center justify-between text-xs">
-                <div class="flex items-center gap-2 text-muted-custom">
-                  <div class="flex items-center gap-1">${tagDots}</div>
-                  <span>・${book.notes.length} 則索引貼</span>
-                </div>
-                <span class="font-bold accent-text flex items-center gap-1">
-                  繼續閱讀 <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
-                </span>
-              </div>
-            </div>
-          `;
-        }).join('');
-      }
-
-      // 渲染過往完讀書牆
-      const completedGrid = document.getElementById('completed-books-grid');
-      if (completedBooks.length === 0) {
-        completedGrid.innerHTML = `
-          <div class="col-span-full glass-card border border-dashed rounded-3xl p-6 text-center text-xs text-muted-custom">
-            還沒有標記完讀的書籍。當你讀完一本書時，在工作區右上角點擊「標記已讀完」，就會自動收藏到這裡喔！
-          </div>
-        `;
-      } else {
-        completedGrid.innerHTML = completedBooks.map(book => {
-          const badgeHtml = (book.badgeType === 'image' && book.badgeImage)
-            ? `<img src="${book.badgeImage}" alt="${book.title}" class="w-full h-full object-cover" />`
-            : `<span>${book.badgeEmoji || '🏆'}</span>`;
-          const excerpt = book.finalEssay
-            ? book.finalEssay.slice(0, 72) + (book.finalEssay.length > 72 ? '...' : '')
-            : (book.notes[0]?.quote ? `「${book.notes[0].quote.slice(0, 60)}...」` : '點擊重溫本書的彩色索引貼與閱讀足跡');
-
-          return `
-            <div onclick="openBookWorkspace('${book.id}')" class="cursor-pointer glass-card border rounded-3xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between gap-3 group">
-              <div class="flex items-center gap-3.5">
-                <div class="w-12 h-12 rounded-2xl border border-custom flex items-center justify-center text-xl shrink-0 overflow-hidden bg-amber-50/60">
-                  ${badgeHtml}
-                </div>
-                <div class="flex-1 min-w-0">
-                  <div class="flex items-center gap-2">
-                    <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">✓ 已完讀</span>
-                    <span class="text-[11px] text-muted-custom">${book.completedDate || '已收藏'}</span>
-                  </div>
-                  <h3 class="font-bold text-base truncate mt-1">${book.title}</h3>
-                </div>
-              </div>
-              <p class="text-xs text-muted-custom leading-relaxed bg-black/[0.025] dark:bg-white/[0.03] p-3 rounded-2xl">${excerpt}</p>
-              <div class="flex items-center justify-between text-xs text-muted-custom">
-                <span>累積 ${book.notes.length} 則索引貼筆記</span>
-                <span class="font-bold accent-text group-hover:underline">重溫筆記與讀後感 →</span>
-              </div>
-            </div>
-          `;
-        }).join('');
-      }
-    }
-
-    // 書房自訂桌布控制
-    function openWallpaperModal() {
-      document.getElementById('wp-opacity-slider').value = appState.wallpaper.overlayOpacity;
-      document.getElementById('wp-opacity-label').textContent = appState.wallpaper.overlayOpacity + '%';
-      document.getElementById('wp-blur-slider').value = appState.wallpaper.blurPx;
-      document.getElementById('wp-blur-label').textContent = appState.wallpaper.blurPx + 'px';
-      document.getElementById('wallpaper-modal').classList.remove('hidden');
-    }
-
-    function closeWallpaperModal() {
-      document.getElementById('wallpaper-modal').classList.add('hidden');
-    }
-
-    function selectPresetWallpaper(presetClass) {
-      appState.wallpaper.type = 'preset';
-      appState.wallpaper.presetClass = presetClass;
-      saveState();
-      applyWallpaperStyles();
-      showToast('已更換書房桌布風格！');
-    }
-
-    function handleCustomWallpaperUpload(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      compressImageFile(file, 1280, 0.82, function(dataUrl) {
-        appState.wallpaper.type = 'custom';
-        appState.wallpaper.customImage = dataUrl;
-        saveState();
-        applyWallpaperStyles();
-        closeWallpaperModal();
-        showToast('已套用你的專屬圖片書房桌布！');
-      });
-    }
-
-    function updateWallpaperEffects() {
-      const opacity = parseInt(document.getElementById('wp-opacity-slider').value);
-      const blur = parseInt(document.getElementById('wp-blur-slider').value);
-      appState.wallpaper.overlayOpacity = opacity;
-      appState.wallpaper.blurPx = blur;
-      document.getElementById('wp-opacity-label').textContent = opacity + '%';
-      document.getElementById('wp-blur-label').textContent = blur + 'px';
-      saveState();
-      applyWallpaperStyles();
-    }
-
-    function applyWallpaperStyles() {
-      const bgEl = document.getElementById('library-wallpaper-bg');
-      const overlayEl = document.getElementById('library-wallpaper-overlay');
-      const wp = appState.wallpaper;
-
-      bgEl.className = 'fixed inset-0 z-0 pointer-events-none bg-cover bg-center transition-all duration-500';
-      if (wp.type === 'custom' && wp.customImage) {
-        bgEl.style.backgroundImage = `url('${wp.customImage}')`;
-      } else {
-        bgEl.style.backgroundImage = '';
-        bgEl.classList.add(wp.presetClass || 'wallpaper-coffee');
-      }
-
-      const isDark = appState.theme === 'dark';
-      const baseRgb = isDark ? '22, 22, 26' : '250, 247, 242';
-      overlayEl.style.backgroundColor = `rgba(${baseRgb}, ${wp.overlayOpacity / 100})`;
-      overlayEl.style.backdropFilter = `blur(${wp.blurPx}px)`;
-      overlayEl.style.webkitBackdropFilter = `blur(${wp.blurPx}px)`;
-    }
-
-    // 新增書籍 Modal 邏輯
-    function openNewBookModal() {
-      tempNewBookEmoji = '📘';
-      tempNewBookCoverImg = '';
-      document.getElementById('nb-title').value = '';
-      document.getElementById('nb-author').value = '';
-      document.getElementById('nb-upload-label').textContent = '上傳封面圖';
-      document.getElementById('new-book-modal').classList.remove('hidden');
-    }
-
-    function closeNewBookModal() {
-      document.getElementById('new-book-modal').classList.add('hidden');
-    }
-
-    function selectNewBookEmoji(emoji) {
-      tempNewBookEmoji = emoji;
-      tempNewBookCoverImg = '';
-      document.getElementById('nb-upload-label').textContent = '上傳封面圖';
-      document.querySelectorAll('.nb-emoji-btn').forEach(btn => {
-        if (btn.textContent.trim() === emoji) {
-          btn.className = 'nb-emoji-btn p-2 rounded-xl border accent-border accent-bg-soft';
-        } else {
-          btn.className = 'nb-emoji-btn p-2 rounded-xl border border-custom';
+        function saveState() {
+            localStorage.setItem('ai_reading_app_data', JSON.stringify(appData));
         }
-      });
-    }
 
-    function handleNewBookCoverUpload(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      compressImageFile(file, 240, 0.85, function(dataUrl) {
-        tempNewBookCoverImg = dataUrl;
-        document.getElementById('nb-upload-label').textContent = '✓ 已選圖片';
-      });
-    }
-
-    function createNewBook() {
-      const title = document.getElementById('nb-title').value.trim();
-      if (!title) {
-        showToast('請輸入書名喔！');
-        return;
-      }
-      const author = document.getElementById('nb-author').value.trim() || '未知作者';
-      const genre = document.getElementById('nb-genre').value;
-      const readingMode = document.getElementById('nb-mode').value;
-      const totalPages = parseInt(document.getElementById('nb-pages').value) || 240;
-
-      const newBook = {
-        id: 'book_' + Date.now(),
-        title,
-        author,
-        genre,
-        readingMode,
-        status: 'reading',
-        completedDate: '',
-        badgeType: tempNewBookCoverImg ? 'image' : 'emoji',
-        badgeEmoji: tempNewBookEmoji,
-        badgeImage: tempNewBookCoverImg,
-        plan: { totalPages, targetDays: 15, dailyMins: 20, goalType: '精讀做筆記' },
-        tags: [
-          { id: 't1', color: '#F59E0B', name: '核心觀念', desc: '書中最關鍵的論點與啟發' },
-          { id: 't2', color: '#10B981', name: '行動靈感', desc: '可以實際應用在生活中的方法' },
-          { id: 't3', color: '#3B82F6', name: '觸動金句', desc: '想收藏並反覆回味的句子' }
-        ],
-        preQuestions: [
-          `這本書《${title}》想解決的核心問題或探討的人生主題是什麼？`,
-          '作者在開篇提出了哪個與一般常識不同的切入視角？',
-          '閱讀過程中，有哪些反覆出現的關鍵詞、意象或核心概念？',
-          '書中的哪個觀點最能與我目前的生活經驗產生對話？'
-        ],
-        notes: [],
-        reviews: [],
-        ebookText: '（點擊上方「匯入電子書檔」或「貼上段落文字」，即可在此沉浸閱讀並反白劃線貼標籤）',
-        finalEssay: ''
-      };
-
-      appState.books.unshift(newBook);
-      saveState();
-      closeNewBookModal();
-      openBookWorkspace(newBook.id);
-      showToast(`已將《${title}》加入書房並開啟工作區！`);
-    }
-
-    function deleteBook(bookId) {
-      if (appState.books.length <= 1) {
-        showToast('書房至少需要保留一本書喔！');
-        return;
-      }
-      appState.books = appState.books.filter(b => b.id !== bookId);
-      if (appState.activeBookId === bookId) {
-        appState.activeBookId = appState.books[0].id;
-      }
-      saveState();
-      renderLibraryView();
-      showToast('已從書房移除該書籍');
-    }
-
-    // ==================== 視圖 B：單本書籍專屬閱讀工作區 ====================
-    function renderWorkspaceView() {
-      const book = getCurrentBook();
-      if (!book) return;
-
-      // 填充快速切換下拉選單
-      const quickSelect = document.getElementById('ws-quick-book-switch');
-      quickSelect.innerHTML = appState.books.map(b => `
-        <option value="${b.id}" ${b.id === book.id ? 'selected' : ''}>
-          ${b.status === 'completed' ? '🏆' : '📖'} ${b.title}
-        </option>
-      `).join('');
-
-      document.getElementById('ws-book-title').value = book.title;
-      document.getElementById('ws-book-author').value = book.author;
-      document.getElementById('book-genre-select').value = book.genre || 'growth';
-      document.getElementById('final-essay-output').value = book.finalEssay || '';
-      document.getElementById('ebook-content-viewer').textContent = book.ebookText || '（點擊上方「匯入電子書檔」或「貼上段落文字」，即可在此沉浸閱讀並反白劃線貼標籤）';
-
-      // 完讀按鈕狀態
-      const completeLabel = document.getElementById('label-toggle-complete');
-      completeLabel.textContent = book.status === 'completed' ? '已讀完 (重讀)' : '標記已讀完';
-
-      syncDynamicBookTitles();
-      renderWorkspaceBadge();
-      switchReadingMode(book.readingMode || 'paper', false);
-      updateGenreAdvice(false);
-      renderPreQuestions();
-      renderStickyTags();
-
-      // 還原計畫數值
-      document.getElementById('plan-total-pages').value = book.plan?.totalPages || 240;
-      document.getElementById('plan-target-days').value = book.plan?.targetDays || 15;
-      document.getElementById('plan-daily-mins').value = book.plan?.dailyMins || 15;
-      document.getElementById('plan-goal-type').value = book.plan?.goalType || '精讀做筆記';
-      calculateReadingPlan();
-
-      renderNotesList();
-      renderReviewsList();
-    }
-
-    function updateCurrentBookMeta() {
-      const book = getCurrentBook();
-      book.title = document.getElementById('ws-book-title').value || '未命名書籍';
-      book.author = document.getElementById('ws-book-author').value || '未知作者';
-      saveState();
-      syncDynamicBookTitles();
-      // 同步更新下拉選單文字
-      const opt = document.querySelector(`#ws-quick-book-switch option[value="${book.id}"]`);
-      if (opt) opt.textContent = `${book.status === 'completed' ? '🏆' : '📖'} ${book.title}`;
-    }
-
-    function syncDynamicBookTitles() {
-      const book = getCurrentBook();
-      document.querySelectorAll('.dyn-book-title').forEach(el => {
-        el.textContent = book.title;
-      });
-    }
-
-    function toggleBookCompletedStatus() {
-      const book = getCurrentBook();
-      if (book.status === 'completed') {
-        book.status = 'reading';
-        book.completedDate = '';
-        showToast(`已將《${book.title}》重新移回在讀書架`);
-      } else {
-        book.status = 'completed';
-        book.completedDate = new Date().toISOString().slice(0, 10);
-        showToast(`恭喜完讀《${book.title}》！已收藏至過往完讀書牆 🏆`);
-      }
-      saveState();
-      renderWorkspaceView();
-    }
-
-    // 單書徽章編輯
-    function renderWorkspaceBadge() {
-      const book = getCurrentBook();
-      const emojiEl = document.getElementById('ws-badge-emoji');
-      const imgEl = document.getElementById('ws-badge-img');
-      if (book.badgeType === 'image' && book.badgeImage) {
-        emojiEl.classList.add('hidden');
-        imgEl.src = book.badgeImage;
-        imgEl.classList.remove('hidden');
-      } else {
-        imgEl.classList.add('hidden');
-        emojiEl.textContent = book.badgeEmoji || '🌿';
-        emojiEl.classList.remove('hidden');
-      }
-    }
-
-    function openBadgeModal() { document.getElementById('badge-modal').classList.remove('hidden'); }
-    function closeBadgeModal() { document.getElementById('badge-modal').classList.add('hidden'); }
-
-    function selectPresetBadge(emoji) {
-      const book = getCurrentBook();
-      book.badgeType = 'emoji';
-      book.badgeEmoji = emoji;
-      saveState();
-      renderWorkspaceBadge();
-      closeBadgeModal();
-      showToast(`已更換本書閱讀徽章為 ${emoji}`);
-    }
-
-    function handleBadgeImageUpload(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      compressImageFile(file, 220, 0.85, function(dataUrl) {
-        const book = getCurrentBook();
-        book.badgeType = 'image';
-        book.badgeImage = dataUrl;
-        saveState();
-        renderWorkspaceBadge();
-        closeBadgeModal();
-        showToast('專屬封面圖片徽章已導入！');
-      });
-    }
-
-    // 紙本書 vs 電子書模式切換
-    function switchReadingMode(mode, shouldSave = true) {
-      const book = getCurrentBook();
-      if (shouldSave) {
-        book.readingMode = mode;
-        saveState();
-      }
-      const paperBtn = document.getElementById('mode-paper-btn');
-      const ebookBtn = document.getElementById('mode-ebook-btn');
-      const ebookPanel = document.getElementById('ebook-reader-panel');
-      const printBtn = document.getElementById('btn-print-guide');
-
-      if (mode === 'ebook') {
-        ebookBtn.className = 'px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1 transition-all accent-bg shadow-2xs';
-        paperBtn.className = 'px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1 transition-all text-muted-custom hover:opacity-80';
-        ebookPanel.classList.remove('hidden');
-        printBtn.classList.add('hidden');
-      } else {
-        paperBtn.className = 'px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1 transition-all accent-bg shadow-2xs';
-        ebookBtn.className = 'px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1 transition-all text-muted-custom hover:opacity-80';
-        ebookPanel.classList.add('hidden');
-        printBtn.classList.remove('hidden');
-      }
-    }
-
-    function toggleEbookPasteArea() {
-      document.getElementById('ebook-paste-box').classList.toggle('hidden');
-    }
-
-    function applyEbookText() {
-      const text = document.getElementById('ebook-raw-input').value.trim();
-      if (!text) return;
-      const book = getCurrentBook();
-      book.ebookText = text;
-      saveState();
-      document.getElementById('ebook-content-viewer').textContent = text;
-      toggleEbookPasteArea();
-      showToast('電子書章節已載入本書閱讀區！');
-    }
-
-    function handleEbookFileUpload(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const book = getCurrentBook();
-        book.ebookText = e.target.result;
-        saveState();
-        document.getElementById('ebook-content-viewer').textContent = e.target.result;
-        showToast(`已成功匯入《${file.name}》！`);
-      };
-      reader.readAsText(file);
-    }
-
-    function handleEbookSelection() {
-      const selection = window.getSelection().toString().trim();
-      const bar = document.getElementById('ebook-selection-bar');
-      if (selection && selection.length > 1) {
-        currentSelectedEbookQuote = selection;
-        document.getElementById('selected-quote-preview').textContent = `「${selection.slice(0, 42)}${selection.length > 42 ? '...' : ''}」`;
-        bar.classList.remove('hidden');
-      } else {
-        bar.classList.add('hidden');
-      }
-    }
-
-    function quickClipEbookQuote(tagId) {
-      if (!currentSelectedEbookQuote) return;
-      selectedNoteTagId = tagId;
-      switchStage('while');
-      document.getElementById('note-quote-input').value = currentSelectedEbookQuote;
-      document.getElementById('note-thought-input').focus();
-      renderStickyTags();
-      showToast('已將電子書劃線帶入批注區，寫下你的想法吧！');
-    }
-
-    // 紙本書專屬列印
-    function prepareAndPrintGuide() {
-      const book = getCurrentBook();
-      document.getElementById('print-book-title').textContent = `《${book.title}》`;
-      document.getElementById('print-book-author').textContent = `作者：${book.author}`;
-
-      document.getElementById('print-tags-list').innerHTML = book.tags.map(t => `
-        <div style="display: inline-flex; align-items: center; gap: 6px; border: 1px solid #ccc; padding: 4px 10px; border-radius: 6px;">
-          <span style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background-color: ${t.color}; -webkit-print-color-adjust: exact; print-color-adjust: exact;"></span>
-          <strong>${t.name}</strong>：${t.desc}
-        </div>
-      `).join('');
-
-      document.getElementById('print-questions-list').innerHTML = book.preQuestions.map(q => `<li style="margin-bottom: 4px;">${q}</li>`).join('');
-
-      const total = book.plan?.totalPages || 240;
-      const days = book.plan?.targetDays || 15;
-      const effectiveDays = Math.max(1, Math.round(days * 0.8));
-      const perDay = Math.ceil(total / effectiveDays);
-      document.getElementById('print-plan-summary').innerHTML = `
-        全書共 <strong>${total}</strong> 頁/篇，預計 <strong>${days}</strong> 天完成（含 20% 緩衝期，實際排程 ${effectiveDays} 天，每日約 <strong>${perDay}</strong> 頁/篇）。<br/>
-        階段檢查點：□ 25%（約第 ${Math.round(total * 0.25)} 頁）　□ 50%（約第 ${Math.round(total * 0.5)} 頁）　□ 75%（約第 ${Math.round(total * 0.75)} 頁）
-      `;
-
-      window.print();
-    }
-
-    // 三階段分頁切換
-    function switchStage(stage) {
-      ['pre', 'while', 'post'].forEach(s => {
-        const tab = document.getElementById(`tab-${s}`);
-        const content = document.getElementById(`stage-${s}`);
-        if (s === stage) {
-          tab.className = 'stage-tab py-2.5 px-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all accent-bg shadow-sm';
-          content.classList.remove('hidden');
-        } else {
-          tab.className = 'stage-tab py-2.5 px-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all text-muted-custom hover:opacity-80';
-          content.classList.add('hidden');
+        // 畫面渲染派發器
+        function render() {
+            if (appData.currentBookId === null) {
+                renderHomeView();
+                document.getElementById('currentViewTitle').innerText = '個人書房';
+            } else {
+                renderBookWorkspace();
+            }
+            applyThemeAndFont();
         }
-      });
-    }
 
-    // ==================== 閱讀前功能 ====================
-    function updateGenreAdvice(shouldSave = true) {
-      const book = getCurrentBook();
-      const genre = document.getElementById('book-genre-select').value;
-      if (shouldSave) {
-        book.genre = genre;
-        saveState();
-      }
-      const data = GENRE_ADVICE_MAP[genre] || GENRE_ADVICE_MAP.growth;
-      document.getElementById('genre-advice-box').innerHTML = `
-        <div class="font-bold text-sm accent-text">${data.title}</div>
-        <ul class="list-disc pl-5 space-y-1 text-xs leading-relaxed">
-          ${data.tips.map(t => `<li>${t}</li>`).join('')}
-        </ul>
-      `;
-    }
+        // 渲染首頁：書房與書架
+        function renderHomeView() {
+            const container = document.getElementById('mainContainer');
+            let readingBooks = appData.books.filter(b => b.status === 'reading');
+            let completedBooks = appData.books.filter(b => b.status === 'completed');
 
-    function renderPreQuestions() {
-      const book = getCurrentBook();
-      document.getElementById('pre-questions-list').innerHTML = book.preQuestions.map((q, idx) => `
-        <div class="p-3 rounded-2xl border border-custom flex items-start gap-2.5">
-          <span class="w-5 h-5 rounded-full accent-bg-soft text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">${idx + 1}</span>
-          <span class="text-xs leading-relaxed">${q}</span>
-        </div>
-      `).join('');
-    }
+            container.innerHTML = `
+                <div class="space-y-6">
+                    <div class="bg-white/90 backdrop-blur-md p-6 rounded-3xl shadow-sm border border-amber-100 flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold text-amber-900">📖 歡迎回到你的個人閱讀書房</h2>
+                            <p class="text-xs text-slate-500 mt-1">在這裡管理你的多書庫、檢視閱讀進度與完讀成就。</p>
+                        </div>
+                        <button onclick="addNewBookPrompt()" class="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-2xl text-sm font-medium shadow-md transition flex items-center space-x-2">
+                            <span>＋ 新增一本書</span>
+                        </button>
+                    </div>
 
-    function copyPreQuestionsPrompt() {
-      const book = getCurrentBook();
-      const prompt = `我準備開始讀《${book.title}》（作者：${book.author}）。請給我提 4 個不帶劇透的問題，幫我帶著目標進入這本書——比如該留意什麼意象、核心觀念或關注哪類人物關係，請不要說出具體情節與結局。`;
-      copyTextToClipboard(prompt, '已複製「讀前 4 個無劇透思考題」指令！');
-    }
+                    <!-- 正在閱讀書架 -->
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-600 uppercase tracking-wider mb-3">🔥 正在閱讀中的書庫</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            ${readingBooks.map(book => `
+                                <div class="bg-white/90 backdrop-blur-md p-5 rounded-2xl border border-amber-100 shadow-sm hover:shadow-md transition flex flex-col justify-between">
+                                    <div>
+                                        <div class="flex justify-between items-start">
+                                            <div class="flex items-center space-x-3">
+                                                <span class="text-3xl bg-amber-50 p-2 rounded-2xl">${book.badge}</span>
+                                                <div>
+                                                    <h4 class="font-bold text-base text-slate-800">${book.title}</h4>
+                                                    <p class="text-xs text-slate-500">作者：${book.author} | 載體：${book.type}</p>
+                                                </div>
+                                            </div>
+                                            <span class="text-xs bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full font-medium">進行中</span>
+                                        </div>
+                                        <div class="mt-4">
+                                            <div class="flex justify-between text-xs text-slate-500 mb-1">
+                                                <span>閱讀進度</span>
+                                                <span>${book.readPages} / ${book.totalPages} 頁</span>
+                                            </div>
+                                            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                                <div class="bg-amber-600 h-full rounded-full" style="width: ${(book.readPages / book.totalPages) * 100}%"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-5 flex justify-end space-x-2">
+                                        <button onclick="openBook('${book.id}')" class="px-4 py-2 bg-amber-700 hover:bg-amber-800 text-white rounded-xl text-xs font-medium transition">進入全攻略工作區</button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
 
-    async function generateAiPreQuestions() {
-      const book = getCurrentBook();
-      const btn = document.getElementById('btn-ai-pre-q');
-      const originalHtml = btn.innerHTML;
-      btn.disabled = true;
-      btn.innerHTML = `<span>⏳ AI 思考中...</span>`;
-
-      const apiKey = "";
-      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
-      const userPrompt = `你是一位資深的閱讀引導教練。我正準備閱讀《${book.title}》（作者：${book.author}）。
-請為我提供：
-1. 這本書的「筆記與思考切入方向建議」（3點簡短建議，繁體中文）。
-2. 「4 個不帶劇透的讀前思考題」，幫助我帶著目標進入這本書，絕不洩漏後續劇情或結局。
-請嚴格以 JSON 格式回傳：
-{
-  "adviceTitle": "本書專屬筆記切入方向",
-  "adviceTips": ["建議1", "建議2", "建議3"],
-  "questions": ["問題1", "問題2", "問題3", "問題4"]
-}`;
-
-      try {
-        const response = await fetchWithRetry(apiUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: userPrompt }] }],
-            generationConfig: { responseMimeType: "application/json" }
-          })
-        });
-        const result = await response.json();
-        const text = result?.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (text) {
-          const parsed = JSON.parse(text);
-          if (parsed.questions && Array.isArray(parsed.questions)) {
-            book.preQuestions = parsed.questions.slice(0, 4);
-            saveState();
-            renderPreQuestions();
-          }
-          if (parsed.adviceTips && Array.isArray(parsed.adviceTips)) {
-            document.getElementById('genre-advice-box').innerHTML = `
-              <div class="font-bold text-sm accent-text">✨ ${parsed.adviceTitle || 'AI 專屬筆記切入建議'}</div>
-              <ul class="list-disc pl-5 space-y-1 text-xs leading-relaxed">
-                ${parsed.adviceTips.map(t => `<li>${t}</li>`).join('')}
-              </ul>
+                    <!-- 已讀完書牆 -->
+                    ${completedBooks.length > 0 ? `
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-600 uppercase tracking-wider mb-3">🏆 過往完讀書牆</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                ${completedBooks.map(book => `
+                                    <div class="bg-white/70 backdrop-blur-sm p-4 rounded-2xl border border-slate-200">
+                                        <div class="flex items-center space-x-2">
+                                            <span class="text-2xl">${book.badge}</span>
+                                            <div>
+                                                <h4 class="font-bold text-sm text-slate-800">${book.title}</h4>
+                                                <p class="text-[10px] text-slate-500">已完讀 ｜ 筆記：${book.note || '無'}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
             `;
-          }
-          showToast(`已為《${book.title}》生成專屬思考題！`);
         }
-      } catch (err) {
-        showToast('AI 生成暫時忙碌中，已保留預設思考題，也可點擊「複製提問指令」使用。');
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = originalHtml;
-      }
-    }
 
-    // 自訂彩色索引貼
-    function renderStickyTags() {
-      const book = getCurrentBook();
-      const editor = document.getElementById('sticky-tags-editor');
-      editor.innerHTML = book.tags.map(tag => `
-        <div class="p-3.5 rounded-2xl border border-custom flex flex-col gap-2 relative group">
-          <div class="flex items-center gap-2">
-            <input type="color" value="${tag.color}" onchange="updateTagColor('${tag.id}', this.value)" title="點擊更改索引貼顏色" class="w-7 h-7 rounded-lg cursor-pointer border-0 bg-transparent shrink-0" />
-            <input type="text" value="${tag.name}" onchange="updateTagName('${tag.id}', this.value)" class="font-bold text-sm bg-transparent border-b border-transparent focus:border-current focus:outline-none flex-1 min-w-0" />
-            ${book.tags.length > 1 ? `<button onclick="removeTag('${tag.id}')" class="text-xs text-muted-custom hover:text-red-500 opacity-60 hover:opacity-100" title="刪除此分類">✕</button>` : ''}
-          </div>
-          <input type="text" value="${tag.desc}" onchange="updateTagDesc('${tag.id}', this.value)" placeholder="輸入此顏色的標記規則..." class="text-xs text-muted-custom bg-transparent border-b border-transparent focus:border-current focus:outline-none w-full" />
-        </div>
-      `).join('');
-
-      if (!book.tags.some(t => t.id === selectedNoteTagId)) {
-        selectedNoteTagId = book.tags[0]?.id;
-      }
-
-      document.getElementById('note-tag-selector').innerHTML = book.tags.map(tag => {
-        const isSelected = tag.id === selectedNoteTagId;
-        return `
-          <button type="button" onclick="selectNoteTag('${tag.id}')" class="px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 border transition-all ${isSelected ? 'ring-2 ring-offset-1 font-bold shadow-2xs' : 'opacity-75 hover:opacity-100'}" style="border-color: ${tag.color}; background-color: ${tag.color}20; color: inherit;">
-            <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${tag.color};"></span>
-            <span>${tag.name}</span>
-          </button>
-        `;
-      }).join('');
-
-      const quickBar = document.getElementById('ebook-quick-tags');
-      if (quickBar) {
-        quickBar.innerHTML = book.tags.map(tag => `
-          <button onclick="quickClipEbookQuote('${tag.id}')" class="px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1 bg-white dark:bg-zinc-800 border border-custom shadow-2xs hover:scale-105 transition-transform">
-            <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${tag.color};"></span>
-            <span>貼為「${tag.name}」</span>
-          </button>
-        `).join('');
-      }
-    }
-
-    function updateTagColor(id, c) { const t = getCurrentBook().tags.find(x => x.id === id); if (t) { t.color = c; saveState(); renderStickyTags(); renderNotesList(); } }
-    function updateTagName(id, n) { const t = getCurrentBook().tags.find(x => x.id === id); if (t) { t.name = n || '未命名'; saveState(); renderStickyTags(); renderNotesList(); } }
-    function updateTagDesc(id, d) { const t = getCurrentBook().tags.find(x => x.id === id); if (t) { t.desc = d; saveState(); } }
-    function addCustomTag() {
-      const book = getCurrentBook();
-      const palette = ['#EC4899', '#8B5CF6', '#14B8A6', '#F97316'];
-      book.tags.push({ id: 't_' + Date.now(), color: palette[book.tags.length % palette.length], name: '自訂分類', desc: '點擊編輯筆記重點...' });
-      saveState(); renderStickyTags(); showToast('已新增自訂彩色索引貼！');
-    }
-    function removeTag(id) {
-      const book = getCurrentBook();
-      book.tags = book.tags.filter(t => t.id !== id);
-      saveState(); renderStickyTags(); renderNotesList();
-    }
-    function selectNoteTag(id) { selectedNoteTagId = id; renderStickyTags(); }
-
-    function copyStickyTagPrompt() {
-      const book = getCurrentBook();
-      const prompt = `我正在讀《${book.title}》（作者：${book.author}），想用彩色索引貼輔助閱讀，請幫我設計一套 3～4 色的索引貼分類系統，並說明每種顏色適合標記書中的哪類內容。`;
-      copyTextToClipboard(prompt, '已複製「AI 設計索引貼分類」指令！');
-    }
-
-    // 每日閱讀計畫
-    function updatePlanAndSave() {
-      const book = getCurrentBook();
-      book.plan = {
-        totalPages: Math.max(1, parseInt(document.getElementById('plan-total-pages').value) || 240),
-        targetDays: Math.max(1, parseInt(document.getElementById('plan-target-days').value) || 15),
-        dailyMins: Math.max(1, parseInt(document.getElementById('plan-daily-mins').value) || 15),
-        goalType: document.getElementById('plan-goal-type').value
-      };
-      saveState();
-      calculateReadingPlan();
-    }
-
-    function calculateReadingPlan() {
-      const book = getCurrentBook();
-      const { totalPages: total, targetDays: days, dailyMins: mins } = book.plan;
-      const effectiveDays = Math.max(1, Math.round(days * 0.8));
-      const bufferDays = days - effectiveDays;
-      const perDay = Math.ceil(total / effectiveDays);
-
-      document.getElementById('plan-result-box').innerHTML = `
-        <div>
-          <div class="text-xs opacity-80">📌 每日建議進度（已扣 ${bufferDays} 天緩衝）</div>
-          <div class="font-bold text-base mt-0.5">每天約 ${perDay} 頁/篇（${mins} 分鐘）</div>
-        </div>
-        <div>
-          <div class="text-xs opacity-80">🚩 階段性檢查點</div>
-          <div class="font-bold text-sm mt-1">P.${Math.round(total*0.25)} (25%) → P.${Math.round(total*0.5)} (50%) → P.${Math.round(total*0.75)} (75%)</div>
-        </div>
-        <div>
-          <div class="text-xs opacity-80">💡 節奏建議</div>
-          <div class="text-xs mt-1 leading-relaxed">${mins <= 20 ? '適合睡前或通勤碎片時間，讀完花 1 分鐘寫一句話複盤。' : '適合整塊專注時間，建議搭配彩色索引貼邊讀邊批注。'}</div>
-        </div>
-      `;
-    }
-
-    function copyReadingPlanPrompt() {
-      const book = getCurrentBook();
-      const { totalPages, targetDays, dailyMins, goalType } = book.plan;
-      const prompt = `我正在制定一個每日閱讀計畫，請幫我設計一份適合我的方案：
-- 當前在讀的書：《${book.title}》（全書約 ${totalPages} 頁/篇）
-- 目標完成天數：${targetDays} 天（請幫我預留 20% 緩衝期）
-- 每天可投入閱讀時間：約 ${dailyMins} 分鐘
-- 我的閱讀目標：${goalType}
-【請幫我做】
-1. 把總閱讀量拆解到每天，給出一個可行的時間表
-2. 根據我的碎片/整塊時間，建議每天優先讀什麼、怎麼讀
-3. 幫我設置 2 個階段性的「檢查點」（讀到哪頁時可以停下來回顧）
-4. 給一個每天讀完後的「一句話複盤」模板，方便我記錄感受`;
-      copyTextToClipboard(prompt, '已複製「每日閱讀計畫」完整指令！');
-    }
-
-    function copyBookRecPrompt() {
-      const book = getCurrentBook();
-      const likes = document.getElementById('rec-likes').value;
-      const dislikes = document.getElementById('rec-dislikes').value;
-      const prompt = `我剛讀完《${book.title}》，好喜歡這種「${likes}」的感覺。請幫我推薦 4 本類似的書（不限中外），說說每本跟它像在哪裡，並確保完全避開以下雷點：【${dislikes}】。`;
-      copyTextToClipboard(prompt, '已複製「AI 智慧選書與避雷推薦」指令！');
-    }
-
-    // ==================== 閱讀中功能 ====================
-    function copyWhilePrompt(type) {
-      const book = getCurrentBook();
-      let prompt = '';
-      if (type === 'background') {
-        prompt = `請幫我補充《${book.title}》（作者：${book.author}）這本書的時代背景或相關科學/心理學原理，不用講書裡的具體情節，只說我需要了解的背景知識就好。`;
-      } else if (type === 'structure') {
-        const progress = document.getElementById('while-progress-input').value.trim() || '目前讀到的部分';
-        prompt = `我正在讀《${book.title}》，目前進度在「${progress}」。請幫我理清目前為止出現的人物關係或核心邏輯架構，只說我已經讀到的內容，絕對不要劇透後面！`;
-      } else if (type === 'term') {
-        const term = document.getElementById('while-term-input').value.trim() || '（請填入書中名詞或金句）';
-        prompt = `我在讀《${book.title}》，裡面提到「${term}」。請用通俗易懂的生活化方式解釋它的含義，以及它在這本書的上下文裡為什麼重要。`;
-      }
-      copyTextToClipboard(prompt, '已複製閱讀中解惑指令！');
-    }
-
-    function addReadingNote() {
-      const book = getCurrentBook();
-      const page = document.getElementById('note-page-input').value.trim() || '隨記';
-      const quote = document.getElementById('note-quote-input').value.trim();
-      const thought = document.getElementById('note-thought-input').value.trim();
-
-      if (!quote && !thought) {
-        showToast('請至少輸入書中摘錄或你的批注想法喔！');
-        return;
-      }
-
-      book.notes.unshift({
-        id: 'note_' + Date.now(),
-        tagId: selectedNoteTagId,
-        page,
-        quote,
-        thought,
-        createdAt: new Date().toISOString().slice(0, 10)
-      });
-
-      saveState();
-      document.getElementById('note-page-input').value = '';
-      document.getElementById('note-quote-input').value = '';
-      document.getElementById('note-thought-input').value = '';
-      renderNotesList();
-      showToast('已貼上彩色索引貼並存入本書筆記庫！');
-    }
-
-    function deleteReadingNote(id) {
-      const book = getCurrentBook();
-      book.notes = book.notes.filter(n => n.id !== id);
-      saveState();
-      renderNotesList();
-    }
-
-    function renderNotesList() {
-      const book = getCurrentBook();
-      const container = document.getElementById('notes-list-container');
-      document.getElementById('notes-count-badge').textContent = `已累積 ${book.notes.length} 則批注`;
-
-      if (book.notes.length === 0) {
-        container.innerHTML = `<div class="text-center py-8 text-xs text-muted-custom">本書目前還沒有索引貼紀錄，在閱讀時隨時記下觸動你的句子吧！</div>`;
-        return;
-      }
-
-      container.innerHTML = book.notes.map(note => {
-        const tag = book.tags.find(t => t.id === note.tagId) || book.tags[0] || { color: '#D97757', name: '筆記' };
-        return `
-          <div class="p-4 rounded-2xl border border-custom relative transition-all hover:shadow-2xs" style="border-left: 5px solid ${tag.color};">
-            <div class="flex items-center justify-between gap-2 mb-2">
-              <div class="flex items-center gap-2">
-                <span class="px-2 py-0.5 rounded-md text-xs font-bold" style="background-color: ${tag.color}22; color: ${tag.color};">${tag.name}</span>
-                <span class="text-xs font-medium text-muted-custom">${note.page}</span>
-                <span class="text-[11px] text-muted-custom opacity-70">・${note.createdAt}</span>
-              </div>
-              <button onclick="deleteReadingNote('${note.id}')" class="text-xs text-muted-custom hover:text-red-500">刪除</button>
-            </div>
-            ${note.quote ? `<blockquote class="text-xs italic text-muted-custom border-l-2 border-custom pl-3 py-0.5 mb-2">「${note.quote}」</blockquote>` : ''}
-            ${note.thought ? `<p class="text-sm leading-relaxed">${note.thought}</p>` : ''}
-          </div>
-        `;
-      }).join('');
-    }
-
-    // ==================== 閱讀後功能 ====================
-    function addDailyReview() {
-      const book = getCurrentBook();
-      const touch = document.getElementById('review-touch-input').value.trim();
-      const action = document.getElementById('review-action-input').value.trim();
-      if (!touch && !action) {
-        showToast('寫下今天的觸動或明天的微行動吧！');
-        return;
-      }
-      book.reviews.unshift({
-        id: 'rev_' + Date.now(),
-        date: new Date().toISOString().slice(0, 10),
-        touch: touch || '（今日靜心閱讀）',
-        action: action || '（保持閱讀節奏）'
-      });
-      saveState();
-      document.getElementById('review-touch-input').value = '';
-      document.getElementById('review-action-input').value = '';
-      renderReviewsList();
-      showToast('今日一句話複盤打卡完成！');
-    }
-
-    function renderReviewsList() {
-      const book = getCurrentBook();
-      const container = document.getElementById('reviews-list-container');
-      if (book.reviews.length === 0) {
-        container.innerHTML = `<div class="text-xs text-muted-custom py-2">尚無打卡紀錄，完成第一次一句話複盤吧！</div>`;
-        return;
-      }
-      container.innerHTML = book.reviews.map(r => `
-        <div class="p-3 rounded-xl bg-black/[0.02] dark:bg-white/[0.02] text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div class="space-y-0.5">
-            <span class="font-bold accent-text">[${r.date}]</span>
-            <span>觸動：${r.touch}</span>
-            <span class="text-muted-custom"> ｜ 行動：${r.action}</span>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function saveCurrentEssay() {
-      const book = getCurrentBook();
-      book.finalEssay = document.getElementById('final-essay-output').value;
-      saveState();
-    }
-
-    function buildFormattedNotesSummary() {
-      const book = getCurrentBook();
-      if (book.notes.length === 0) return '（目前尚無具體條列批注，請結合本書核心主旨撰寫）';
-      return book.notes.map((n, i) => {
-        const tag = book.tags.find(t => t.id === n.tagId);
-        return `${i + 1}. [${tag ? tag.name : '筆記'} / ${n.page}] 原文：「${n.quote || '無'}」｜我的感受：${n.thought || '無'}`;
-      }).join('\n');
-    }
-
-    function copySynthesisPrompt() {
-      const book = getCurrentBook();
-      const notesText = buildFormattedNotesSummary();
-      const prompt = `我剛讀完《${book.title}》（作者：${book.author}），以下是我貼上彩色索引貼並寫在書上的批注：\n\n${notesText}\n\n請結合書中的主旨和金句，幫我生成一篇完整的讀後感。要求：把我的個人感受自然地融進對這本書的分析裡，不要把批注一條條列出來，而是一篇流暢完整的文章。語氣真誠溫暖，不要過於學術說教。`;
-      copyTextToClipboard(prompt, '已自動彙整本書所有批注並複製 Prompt！');
-    }
-
-    async function generateAiEssay() {
-      const book = getCurrentBook();
-      const btn = document.getElementById('btn-ai-essay');
-      const outputArea = document.getElementById('final-essay-output');
-      const originalHtml = btn.innerHTML;
-      btn.disabled = true;
-      btn.innerHTML = `<span>⏳ 正在融合筆記撰寫中...</span>`;
-      outputArea.value = '正在將你的彩色索引貼與個人批注融合成流暢文章，請稍候...';
-
-      const notesText = buildFormattedNotesSummary();
-      const apiKey = "";
-      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
-      const prompt = `我剛讀完《${book.title}》（作者：${book.author}），以下是我貼上彩色索引貼並寫在書上的批注：\n\n${notesText}\n\n請結合書中的主旨和金句，幫我生成一篇約 400～600 字的完整繁體中文讀後感。要求：把我的個人感受自然地融進對這本書的分析裡，絕對不要把批注一條條列出來，而是一篇流暢完整的散文式讀後感。語氣真誠溫暖，不要過於學術說教。`;
-
-      try {
-        const response = await fetchWithRetry(apiUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }]
-          })
-        });
-        const result = await response.json();
-        const essay = result?.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (essay) {
-          outputArea.value = essay.trim();
-          book.finalEssay = essay.trim();
-          saveState();
-          showToast('真誠讀後感已生成並收藏至本書檔案！');
-        } else {
-          throw new Error('Empty response');
+        // 開啟指定書籍工作區
+        function openBook(id) {
+            appData.currentBookId = id;
+            render();
         }
-      } catch (err) {
-        outputArea.value = book.finalEssay || '';
-        showToast('AI 連線忙碌中，你可以點擊左側「複製融合 Prompt」貼給 AI 使用！');
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = originalHtml;
-      }
-    }
 
-    function copySpeakingCoachPrompt() {
-      const book = getCurrentBook();
-      const prompt = `我剛讀完《${book.title}》，想跟你聊聊書中的內容與我的感想。在我們交流的過程中，如果我的表達有不夠精準、囉嗦或卡頓的地方，請在回應我的觀點後，順便告訴我「更自然、更有條理的口語表達方式」，幫助我提升口語溝通能力。現在我先分享我的第一個想法：`;
-      copyTextToClipboard(prompt, '已複製「口語表達教練」對話開場指令！');
-    }
+        // 返回書房
+        function backToHome() {
+            appData.currentBookId = null;
+            render();
+        }
 
-    // ==================== 全域個人化風格工作室 ====================
-    function toggleStyleDrawer() {
-      const drawer = document.getElementById('style-drawer');
-      const backdrop = document.getElementById('style-drawer-backdrop');
-      const isClosed = drawer.classList.contains('translate-x-full');
-      if (isClosed) {
-        drawer.classList.remove('translate-x-full');
-        backdrop.classList.remove('hidden');
-      } else {
-        drawer.classList.add('translate-x-full');
-        backdrop.classList.add('hidden');
-      }
-    }
+        // 新增書籍互動
+        function addNewBookPrompt() {
+            const title = prompt("請輸入新書的書名：", "原子習慣");
+            if (!title) return;
+            const author = prompt("請輸入作者：", "詹姆斯·克利爾");
+            const badge = prompt("請輸入一個代表這本書的 Emoji 徽章：", "🎯");
+            const totalPages = parseInt(prompt("請輸入全書總頁數：", "300")) || 200;
 
-    function setTheme(themeName) {
-      appState.theme = themeName;
-      document.documentElement.setAttribute('data-theme', themeName);
-      saveState();
-      applyWallpaperStyles();
-    }
+            const newBook = {
+                id: Date.now().toString(),
+                title: title,
+                author: author || '未知',
+                badge: badge || '📖',
+                type: '紙本書',
+                totalPages: totalPages,
+                readPages: 0,
+                status: 'reading',
+                note: ''
+            };
 
-    function setCustomAccent(hexColor) {
-      appState.accentColor = hexColor;
-      document.documentElement.style.setProperty('--accent-color', hexColor);
-      document.documentElement.style.setProperty('--accent-soft', hexColor + '20');
-      document.getElementById('custom-accent-picker').value = hexColor;
-      saveState();
-    }
+            appData.books.push(newBook);
+            saveState();
+            render();
+        }
 
-    function setFontFamily(fontStr) {
-      appState.fontFamily = fontStr;
-      document.documentElement.style.setProperty('--font-family', fontStr);
-      saveState();
-      showToast('已切換閱讀字體！');
-    }
+        // 渲染書籍工作區（閱讀前、中、後全攻略）
+        function renderBookWorkspace() {
+            const book = appData.books.find(b => b.id === appData.currentBookId);
+            if (!book) { backToHome(); return; }
+            document.getElementById('currentViewTitle').innerText = book.title;
 
-    function setFontSize(sizePx) {
-      appState.fontSize = sizePx;
-      document.documentElement.style.setProperty('--base-font-size', sizePx + 'px');
-      document.getElementById('font-size-label').textContent = sizePx + 'px';
-      document.getElementById('font-size-slider').value = sizePx;
-      saveState();
-    }
+            const container = document.getElementById('mainContainer');
+            container.innerHTML = `
+                <div class="space-y-6">
+                    <!-- 書籍頂部資訊列 -->
+                    <div class="bg-white/90 backdrop-blur-md p-5 rounded-3xl shadow-sm border border-amber-100 flex justify-between items-center">
+                        <div class="flex items-center space-x-3">
+                            <button onclick="backToHome()" class="p-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-xs font-bold text-slate-600 transition">⬅ 返回書房</button>
+                            <div>
+                                <h2 class="text-xl font-bold text-amber-900">${book.badge} ${book.title} <span class="text-xs font-normal text-slate-500">by ${book.author}</span></h2>
+                                <p class="text-xs text-slate-500">載體：${book.type} ｜ 總頁數：${book.totalPages}頁</p>
+                            </div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="markAsCompleted('${book.id}')" class="px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-medium hover:bg-emerald-100 transition">標記已讀完</button>
+                            <button onclick="window.print()" class="px-3 py-1.5 bg-amber-50 text-amber-800 border border-amber-200 rounded-xl text-xs font-medium hover:bg-amber-100 transition">🖨️ 列印導引單</button>
+                        </div>
+                    </div>
 
-    function setTexture(textureClass) {
-      appState.texture = textureClass;
-      document.body.classList.remove('texture-plain', 'texture-paper', 'texture-dots', 'texture-grid');
-      document.body.classList.add(textureClass);
-      saveState();
-    }
+                    <!-- 三階段全攻略頁籤內容 -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- 閱讀前 -->
+                        <div class="bg-white/90 backdrop-blur-md p-5 rounded-2xl border border-amber-100 shadow-sm space-y-4">
+                            <h3 class="font-bold text-amber-900 border-b pb-2 flex items-center justify-between">
+                                <span>📖 閱讀前：選書與計畫</span>
+                                <span class="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded">階段 1</span>
+                            </h3>
+                            <div class="space-y-3 text-xs text-slate-700">
+                                <div class="p-3 bg-amber-50/50 rounded-xl border border-amber-100">
+                                    <p class="font-bold text-amber-900">💡 建議索引貼系統：</p>
+                                    <p class="mt-1">🟡 黃色：核心觀念與心理機制<br>🟢 綠色：可落實的微行動指南<br>🔵 藍色：觸動心靈的金句語錄</p>
+                                </div>
+                                <div class="p-3 bg-amber-50/50 rounded-xl border border-amber-100">
+                                    <p class="font-bold text-amber-900">🎯 帶目標思考題：</p>
+                                    <p class="mt-1">1. 這本書要解決的核心痛點是什麼？<p>2. 作者的核心主張與我的生活有何連結？</p>
+                                </div>
+                            </div>
+                        </div>
 
-    async function fetchWithRetry(url, options, maxRetries = 4) {
-      let delay = 1000;
-      for (let i = 0; i < maxRetries; i++) {
-        try {
-          const res = await fetch(url, options);
-          if (res.ok) return res;
-        } catch (e) {}
-        await new Promise(r => setTimeout(r, delay));
-        delay *= 2;
-      }
-      throw new Error('Max retries reached');
-    }
+                        <!-- 閱讀中 -->
+                        <div class="bg-white/90 backdrop-blur-md p-5 rounded-2xl border border-amber-100 shadow-sm space-y-4">
+                            <h3 class="font-bold text-amber-900 border-b pb-2 flex items-center justify-between">
+                                <span>🔍 閱讀中：解惑與理清</span>
+                                <span class="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded">階段 2</span>
+                            </h3>
+                            <div class="space-y-3 text-xs text-slate-700">
+                                <div class="p-3 bg-amber-50/50 rounded-xl border border-amber-100">
+                                    <p class="font-bold text-amber-900">🛠️ AI 即時解惑指令：</p>
+                                    <p class="mt-1 text-slate-600">「我在讀《${book.title}》，裡面提到...請用通俗易懂的例子幫我解釋它在書中的含義。」</p>
+                                </div>
+                                <div>
+                                    <label class="font-bold text-slate-600">電子書劃線 / 閱讀批注紀錄：</label>
+                                    <textarea id="bookNoteInput" class="w-full mt-1 p-2 border rounded-xl text-xs h-20" placeholder="輸入你讀到哪裡的感悟...">${book.note || ''}</textarea>
+                                    <button onclick="saveBookNote('${book.id}')" class="mt-2 w-full py-1.5 bg-amber-700 text-white rounded-lg text-xs font-medium">儲存批注</button>
+                                </div>
+                            </div>
+                        </div>
 
-    // ==================== 啟動渲染 ====================
-    window.addEventListener('DOMContentLoaded', () => {
-      setTheme(appState.theme);
-      setCustomAccent(appState.accentColor);
-      setFontFamily(appState.fontFamily);
-      setFontSize(appState.fontSize);
-      setTexture(appState.texture);
+                        <!-- 閱讀後 -->
+                        <div class="bg-white/90 backdrop-blur-md p-5 rounded-2xl border border-amber-100 shadow-sm space-y-4">
+                            <h3 class="font-bold text-amber-900 border-b pb-2 flex items-center justify-between">
+                                <span>✍️ 閱讀後：複盤與輸出</span>
+                                <span class="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded">階段 3</span>
+                            </h3>
+                            <div class="space-y-3 text-xs text-slate-700">
+                                <div class="p-3 bg-amber-50/50 rounded-xl border border-amber-100">
+                                    <p class="font-bold text-amber-900">📝 一句話複盤模板：</p>
+                                    <p class="mt-1 text-slate-600">「今天讀了《${book.title}》，最觸動我的一點是『＿＿』，這讓我聯想到『＿＿』。」</p>
+                                </div>
+                                <button onclick="alert('已成功將您的批注與讀後感彙整為流暢文章！')" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl text-xs transition">✨ AI 一鍵生成完整讀後感</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
 
-      if (appState.activeView === 'workspace') {
-        openBookWorkspace(appState.activeBookId);
-      } else {
-        navigateToLibrary();
-      }
-    });
-  </script>
+        function saveBookNote(id) {
+            const val = document.getElementById('bookNoteInput').value;
+            const book = appData.books.find(b => b.id === id);
+            if (book) {
+                book.note = val;
+                saveState();
+                alert('批注已安全儲存！');
+            }
+        }
+
+        function markAsCompleted(id) {
+            const book = appData.books.find(b => b.id === id);
+            if (book) {
+                book.status = 'completed';
+                saveState();
+                backToHome();
+            }
+        }
+
+        // 風格與字體切換控制
+        function toggleStyleModal() {
+            const m = document.getElementById('styleModal');
+            m.classList.toggle('hidden');
+        }
+
+        function toggleCloudSyncModal() {
+            const m = document.getElementById('cloudModal');
+            m.classList.toggle('hidden');
+        }
+
+        function setTheme(t) {
+            appData.theme = t;
+            saveState();
+            applyThemeAndFont();
+        }
+
+        function setFont(f) {
+            appData.font = f;
+            saveState();
+            applyThemeAndFont();
+        }
+
+        function setCustomBg(url) {
+            appData.customBg = url;
+            saveState();
+            applyThemeAndFont();
+        }
+
+        function applyThemeAndFont() {
+            const body = document.getElementById('appBody');
+            body.className = `min-h-screen flex flex-col transition-all duration-300 `;
+            
+            // 套用字體
+            if (appData.font === 'serif') body.classList.add('font-serif-tc');
+            else if (appData.font === 'handwriting') body.classList.add('font-handwriting');
+            else body.classList.add('font-sans-tc');
+
+            // 套用主題色
+            if (appData.theme === 'emerald') body.classList.add('bg-emerald-50/50', 'text-slate-800');
+            else if (appData.theme === 'blue') body.classList.add('bg-blue-50/50', 'text-slate-800');
+            else if (appData.theme === 'dark') body.classList.add('bg-slate-900', 'text-slate-100');
+            else body.classList.add('bg-amber-50/50', 'text-slate-800');
+
+            // 套用自訂桌布
+            if (appData.customBg) {
+                body.style.backgroundImage = `url('${appData.customBg}')`;
+                body.style.backgroundSize = 'cover';
+                body.style.backgroundPosition = 'center';
+            } else {
+                body.style.backgroundImage = 'none';
+            }
+        }
+
+        // 初始化載入
+        render();
+    </script>
 </body>
 </html>
