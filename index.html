@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI 閱讀手札與全攻略系統｜個人書房版</title>
+  <title>AI 閱讀手札與全攻略系統｜個人書房旗艦版</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Google Fonts：思源黑體、思源宋體、圓潤手帳體 -->
@@ -78,10 +78,8 @@
         linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px);
     }
 
-    /* 書房主頁預設療癒桌布圖案 (純 CSS 幾何與氛圍漸層，無外部圖片依賴) */
-    .wallpaper-minimal {
-      background: transparent;
-    }
+    /* 書房主頁預設療癒桌布圖案 */
+    .wallpaper-minimal { background: transparent; }
     .wallpaper-coffee {
       background-color: #F5EBE0;
       background-image: 
@@ -123,14 +121,14 @@
     }
 
     .glass-card {
-      background-color: rgba(255, 255, 255, 0.84);
+      background-color: rgba(255, 255, 255, 0.86);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
-      border-color: rgba(232, 225, 213, 0.8);
+      border-color: rgba(232, 225, 213, 0.85);
     }
     [data-theme="dark"] .glass-card {
-      background-color: rgba(34, 34, 40, 0.84);
-      border-color: rgba(60, 60, 70, 0.8);
+      background-color: rgba(34, 34, 40, 0.86);
+      border-color: rgba(60, 60, 70, 0.85);
     }
 
     .text-muted-custom { color: var(--text-muted); }
@@ -144,12 +142,13 @@
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: rgba(150, 150, 150, 0.3); border-radius: 9999px; }
 
-    /* 列印專用樣式：紙本書思維導引單 / 完讀紀念卡 */
+    /* 列印專用樣式：支援「紙本書導引單」或「PDF 完整筆記匯出」 */
     @media print {
       body * { visibility: hidden; }
-      #print-sheet, #print-sheet * { visibility: visible; }
-      #print-sheet {
-        position: fixed;
+      body.print-mode-guide #print-sheet,
+      body.print-mode-guide #print-sheet * { visibility: visible; }
+      body.print-mode-guide #print-sheet {
+        position: absolute;
         left: 0;
         top: 0;
         width: 100%;
@@ -158,29 +157,41 @@
         padding: 20px !important;
         display: block !important;
       }
+
+      body.print-mode-notes #pdf-export-sheet,
+      body.print-mode-notes #pdf-export-sheet * { visibility: visible; }
+      body.print-mode-notes #pdf-export-sheet {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        background: #FFFFFF !important;
+        color: #111111 !important;
+        padding: 24px !important;
+        display: block !important;
+      }
       .no-print { display: none !important; }
     }
   </style>
 </head>
-<body class="min-h-screen texture-paper pb-20 relative">
+<body class="min-h-screen texture-paper pb-24 relative">
 
   <!-- Toast 通知提示 -->
   <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none no-print"></div>
 
   <!-- ===================================================================== -->
-  <!-- 視圖 A：我的書房（主頁面 / 多書庫總覽 / 過往完讀書牆）                  -->
+  <!-- 視圖 A：我的書房（主頁面 / 多書庫總覽 / 統計儀表板 / 完讀書牆）        -->
   <!-- ===================================================================== -->
   <div id="view-library" class="min-h-screen relative transition-all duration-500 no-print">
     <!-- 主頁自訂桌布底圖層 -->
     <div id="library-wallpaper-bg" class="fixed inset-0 z-0 pointer-events-none bg-cover bg-center transition-all duration-500 wallpaper-coffee"></div>
-    <!-- 主頁桌布柔光遮罩層（確保文字永遠清晰可讀） -->
+    <!-- 主頁桌布柔光遮罩層 -->
     <div id="library-wallpaper-overlay" class="fixed inset-0 z-0 pointer-events-none transition-all duration-300" style="background-color: rgba(250, 247, 242, 0.35); backdrop-filter: blur(0px);"></div>
 
-    <!-- 主頁面內容區 -->
-    <div class="relative z-10 max-w-5xl mx-auto px-4 pt-6 space-y-8">
+    <div class="relative z-10 max-w-5xl mx-auto px-4 pt-6 space-y-7">
       
       <!-- 書房頂部歡迎橫幅與控制列 -->
-      <header class="glass-card border rounded-3xl p-5 md:p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <header class="glass-card border rounded-3xl p-5 md:p-6 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div class="flex items-center gap-4">
           <div class="w-14 h-14 rounded-2xl accent-bg flex items-center justify-center text-2xl shadow-md shrink-0">
             🏡
@@ -190,21 +201,27 @@
               <h1 class="font-bold text-xl md:text-2xl tracking-tight">我的專屬閱讀書房</h1>
               <span id="library-stats-pill" class="text-xs font-medium px-2.5 py-0.5 rounded-full accent-bg-soft">在讀 2 本・已讀完 1 本</span>
             </div>
-            <p class="text-xs md:text-sm text-muted-custom mt-1">挑選一本正在閱讀的書進入沉浸工作區，或自訂你喜歡的書房桌布氛圍</p>
+            <p class="text-xs md:text-sm text-muted-custom mt-1">管理多書閱讀進度、累積彩色索引貼與一鍵備份你的思考資產</p>
           </div>
         </div>
 
-        <div class="flex items-center gap-2.5 flex-wrap shrink-0">
+        <div class="flex items-center gap-2 flex-wrap shrink-0">
+          <!-- 資料匯出/備份按鈕 -->
+          <button onclick="openBackupModal()" class="px-3 py-2.5 rounded-2xl border border-custom card-surface hover:scale-[1.02] transition-transform text-xs font-bold flex items-center gap-1.5 shadow-2xs" title="備份書房資料">
+            <i data-lucide="database-backup" class="w-4 h-4 accent-text"></i>
+            <span>書房備份</span>
+          </button>
+
           <!-- 更換書房桌布按鈕 -->
-          <button onclick="openWallpaperModal()" class="px-3.5 py-2.5 rounded-2xl border border-custom card-surface hover:scale-[1.02] transition-transform text-xs font-bold flex items-center gap-1.5 shadow-2xs">
+          <button onclick="openWallpaperModal()" class="px-3 py-2.5 rounded-2xl border border-custom card-surface hover:scale-[1.02] transition-transform text-xs font-bold flex items-center gap-1.5 shadow-2xs">
             <i data-lucide="image" class="w-4 h-4 accent-text"></i>
-            <span>更換書房桌布</span>
+            <span>書房桌布</span>
           </button>
 
           <!-- 風格與字體設定 -->
-          <button onclick="toggleStyleDrawer()" class="px-3.5 py-2.5 rounded-2xl border border-custom card-surface hover:scale-[1.02] transition-transform text-xs font-bold flex items-center gap-1.5 shadow-2xs">
+          <button onclick="toggleStyleDrawer()" class="px-3 py-2.5 rounded-2xl border border-custom card-surface hover:scale-[1.02] transition-transform text-xs font-bold flex items-center gap-1.5 shadow-2xs">
             <i data-lucide="palette" class="w-4 h-4 accent-text"></i>
-            <span>主題與字體</span>
+            <span>主題字體</span>
           </button>
 
           <!-- 新增書籍按鈕 -->
@@ -215,6 +232,43 @@
         </div>
       </header>
 
+      <!-- 閱讀成就與統計儀表板 + 搜尋篩選列 -->
+      <section class="glass-card border rounded-3xl p-4 md:p-5 shadow-sm space-y-4">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div class="p-3 rounded-2xl bg-black/[0.025] dark:bg-white/[0.03] border border-custom/60">
+            <div class="text-[11px] text-muted-custom flex items-center gap-1"><i data-lucide="book-open" class="w-3.5 h-3.5 accent-text"></i> 正在閱讀</div>
+            <div id="stat-reading-count" class="font-bold text-xl mt-1">2 <span class="text-xs font-normal text-muted-custom">本</span></div>
+          </div>
+          <div class="p-3 rounded-2xl bg-black/[0.025] dark:bg-white/[0.03] border border-custom/60">
+            <div class="text-[11px] text-muted-custom flex items-center gap-1"><i data-lucide="trophy" class="w-3.5 h-3.5 accent-text"></i> 累計完讀</div>
+            <div id="stat-completed-count" class="font-bold text-xl mt-1">1 <span class="text-xs font-normal text-muted-custom">本</span></div>
+          </div>
+          <div class="p-3 rounded-2xl bg-black/[0.025] dark:bg-white/[0.03] border border-custom/60">
+            <div class="text-[11px] text-muted-custom flex items-center gap-1"><i data-lucide="bookmark" class="w-3.5 h-3.5 accent-text"></i> 總索引貼數</div>
+            <div id="stat-total-notes" class="font-bold text-xl mt-1">3 <span class="text-xs font-normal text-muted-custom">則</span></div>
+          </div>
+          <div class="p-3 rounded-2xl bg-black/[0.025] dark:bg-white/[0.03] border border-custom/60">
+            <div class="text-[11px] text-muted-custom flex items-center gap-1"><i data-lucide="flame" class="w-3.5 h-3.5 accent-text"></i> 複盤微行動</div>
+            <div id="stat-total-reviews" class="font-bold text-xl mt-1">1 <span class="text-xs font-normal text-muted-custom">次</span></div>
+          </div>
+        </div>
+
+        <!-- 全書庫即時搜尋與分類過濾 -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 pt-1">
+          <div class="relative flex-1">
+            <i data-lucide="search" class="w-4 h-4 text-muted-custom absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+            <input id="library-search-input" type="text" oninput="renderLibraryView()" placeholder="搜尋書名、作者、金句或批注靈感..." class="w-full pl-9 pr-4 py-2 rounded-2xl border border-custom bg-white/70 dark:bg-black/20 text-xs focus:outline-none" />
+          </div>
+          <select id="library-genre-filter" onchange="renderLibraryView()" class="px-3.5 py-2 rounded-2xl border border-custom bg-white/70 dark:bg-black/20 text-xs focus:outline-none">
+            <option value="all">📚 全部書籍類型</option>
+            <option value="growth">🌱 散文 / 自我成長</option>
+            <option value="fiction">🎭 小說 / 懸疑推理</option>
+            <option value="nonfiction">🧠 商業 / 心理科學</option>
+            <option value="classic">🏛️ 文學名著 / 歷史</option>
+          </select>
+        </div>
+      </section>
+
       <!-- 區塊一：正在閱讀中的書架 -->
       <section class="space-y-4">
         <div class="flex items-center justify-between px-1">
@@ -222,12 +276,10 @@
             <span class="text-lg">📖</span>
             <h2 class="font-bold text-lg">正在閱讀中（多書並行書架）</h2>
           </div>
-          <span class="text-xs text-muted-custom">點擊書籍卡片即可切換進入該書的閱讀工作區</span>
+          <span class="text-xs text-muted-custom">點擊卡片進入沉浸工作區，隨時追蹤閱讀進度條</span>
         </div>
 
-        <div id="reading-books-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <!-- 動態渲染在讀書籍卡片 -->
-        </div>
+        <div id="reading-books-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
       </section>
 
       <!-- 區塊二：過往完讀書牆（已讀成就庫） -->
@@ -240,9 +292,7 @@
           <span class="text-xs text-muted-custom">每一本讀完的書，都留下了專屬的思考足跡</span>
         </div>
 
-        <div id="completed-books-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <!-- 動態渲染已讀完書籍卡片 -->
-        </div>
+        <div id="completed-books-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
       </section>
 
     </div>
@@ -264,7 +314,7 @@
             <span>我的書房</span>
           </button>
 
-          <!-- 閱讀徽章（點擊可更換 Emoji 或上傳本地圖片） -->
+          <!-- 閱讀徽章 -->
           <button onclick="openBadgeModal()" title="點擊更換這本書的閱讀徽章或上傳封面" class="relative group w-11 h-11 rounded-2xl border-2 border-custom flex items-center justify-center text-xl shrink-0 overflow-hidden shadow-2xs hover:scale-105 transition-transform bg-amber-50/50">
             <span id="ws-badge-emoji">🌿</span>
             <img id="ws-badge-img" src="" alt="徽章" class="hidden w-full h-full object-cover" />
@@ -275,16 +325,14 @@
 
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2">
-              <!-- 快速切換其他書籍下拉選單 -->
-              <select id="ws-quick-book-switch" onchange="openBookWorkspace(this.value)" class="text-xs font-bold px-2 py-0.5 rounded-lg accent-bg-soft focus:outline-none cursor-pointer max-w-[160px] truncate" title="快速切換另一本書">
-              </select>
+              <select id="ws-quick-book-switch" onchange="openBookWorkspace(this.value)" class="text-xs font-bold px-2 py-0.5 rounded-lg accent-bg-soft focus:outline-none cursor-pointer max-w-[150px] truncate" title="快速切換另一本書"></select>
               <input id="ws-book-author" type="text" placeholder="作者名稱" oninput="updateCurrentBookMeta()" class="text-xs text-muted-custom bg-transparent border-b border-transparent hover:border-custom focus:border-current focus:outline-none w-24 sm:w-32 truncate" />
             </div>
             <input id="ws-book-title" type="text" placeholder="輸入書名..." oninput="updateCurrentBookMeta()" class="w-full font-bold text-base md:text-lg bg-transparent border-b border-transparent hover:border-custom focus:border-current focus:outline-none truncate mt-0.5" />
           </div>
         </div>
 
-        <!-- 右側：紙本/電子書切換 + 列印導引單 + 標記已讀完 + 風格設定 -->
+        <!-- 右側：紙本/電子書切換 + 專注計時器 + 匯出筆記挑選視窗 + 標記完讀 -->
         <div class="flex items-center gap-2 shrink-0 flex-wrap">
           <!-- 紙本書 / 電子書模式切換 -->
           <div class="inline-flex rounded-xl p-1 border border-custom bg-black/5 dark:bg-white/5">
@@ -296,10 +344,22 @@
             </button>
           </div>
 
+          <!-- 沉浸閱讀番茄鐘計時器 -->
+          <button id="btn-focus-timer" onclick="toggleFocusTimerModal()" class="px-3 py-2 rounded-xl border border-custom card-surface hover:opacity-90 text-xs font-bold flex items-center gap-1.5 shadow-2xs" title="開啟沉浸閱讀專注計時器">
+            <i data-lucide="timer" class="w-4 h-4 accent-text"></i>
+            <span id="header-timer-text">專注計時</span>
+          </button>
+
+          <!-- 匯出筆記按鈕（開啟多格式與內容勾選視窗） -->
+          <button onclick="openExportNotesModal()" class="px-3 py-2 rounded-xl border border-custom card-surface hover:opacity-90 text-xs font-bold flex items-center gap-1.5 shadow-2xs" title="自訂格式與內容匯出本書筆記">
+            <i data-lucide="download" class="w-4 h-4 accent-text"></i>
+            <span>匯出筆記</span>
+          </button>
+
           <!-- 紙本書專屬：列印閱讀思維導引單 -->
           <button id="btn-print-guide" onclick="prepareAndPrintGuide()" class="px-3 py-2 rounded-xl border border-custom card-surface hover:opacity-90 text-xs font-medium flex items-center gap-1.5 shadow-2xs" title="列印成紙本書隨身夾頁導引單">
             <i data-lucide="printer" class="w-4 h-4 accent-text"></i>
-            <span class="hidden sm:inline">列印導引單</span>
+            <span class="hidden md:inline">列印導引單</span>
           </button>
 
           <!-- 標記為已讀完 / 重新閱讀切換 -->
@@ -317,7 +377,30 @@
     </header>
 
     <!-- 工作區主體內容 -->
-    <main class="max-w-5xl mx-auto px-4 pt-6 space-y-6">
+    <main class="max-w-5xl mx-auto px-4 pt-5 space-y-6">
+
+      <!-- 本書即時閱讀進度追蹤條 -->
+      <section class="card-surface border border-custom rounded-3xl p-4 sm:px-6 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex-1 space-y-2">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-bold flex items-center gap-1.5">
+              <i data-lucide="trending-up" class="w-4 h-4 accent-text"></i>
+              <span>本書閱讀進度追蹤</span>
+            </span>
+            <span id="ws-progress-percent-text" class="font-bold accent-text">0% (0 / 240 頁)</span>
+          </div>
+          <div class="w-full h-2.5 rounded-full bg-black/5 dark:bg-white/10 overflow-hidden">
+            <div id="ws-progress-bar-fill" class="h-full accent-bg rounded-full transition-all duration-300" style="width: 0%;"></div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 shrink-0 text-xs">
+          <span class="text-muted-custom">目前讀到第</span>
+          <input id="ws-current-page-input" type="number" min="0" value="0" oninput="updateCurrentPageProgress(this.value)" class="w-20 px-2.5 py-1.5 rounded-xl border border-custom font-bold text-center bg-transparent focus:outline-none" />
+          <span class="text-muted-custom">頁/篇</span>
+          <button onclick="quickIncrementPages(10)" class="px-2.5 py-1.5 rounded-xl accent-bg-soft font-bold hover:opacity-80" title="快速增加 10 頁進度">+10</button>
+        </div>
+      </section>
 
       <!-- 電子書模式專屬閱讀器抽屜 -->
       <section id="ebook-reader-panel" class="hidden card-surface border border-custom rounded-3xl p-5 shadow-sm space-y-4">
@@ -561,14 +644,14 @@
           </div>
         </div>
 
-        <!-- 2. 彩色索引貼與批注記錄區 -->
+        <!-- 2. 彩色索引貼與批注記錄區 (含顏色篩選與編輯) -->
         <div class="card-surface border border-custom rounded-3xl p-6 shadow-sm space-y-5">
           <div class="flex flex-wrap items-center justify-between gap-2">
             <div class="flex items-center gap-2.5">
               <span class="w-9 h-9 rounded-xl accent-bg-soft flex items-center justify-center text-lg">📌</span>
               <div>
                 <h3 class="font-bold text-base">本書彩色索引貼與靈感批注庫</h3>
-                <p class="text-xs text-muted-custom">記錄書中金句與當下想法，閱讀後可一鍵融合成完整讀後感</p>
+                <p class="text-xs text-muted-custom">記錄書中金句與當下想法，支援依索引貼顏色篩選與隨時編輯</p>
               </div>
             </div>
             <span id="notes-count-badge" class="text-xs font-medium px-2.5 py-1 rounded-full border border-custom">已累積 0 則批注</span>
@@ -591,6 +674,9 @@
               </button>
             </div>
           </div>
+
+          <!-- 索引貼顏色篩選列 -->
+          <div id="notes-filter-bar" class="flex items-center gap-2 flex-wrap pt-1"></div>
 
           <div id="notes-list-container" class="space-y-3"></div>
         </div>
@@ -652,11 +738,16 @@
 
           <div class="space-y-2">
             <textarea id="final-essay-output" rows="6" oninput="saveCurrentEssay()" placeholder="點擊上方「AI 一鍵生成讀後感」，系統會自動結合你的彩色索引貼批注與本書主旨，為你撰寫一篇真誠自然的讀後感（內容也會同步收藏至過往完讀書牆）..." class="w-full p-4 rounded-2xl border border-custom text-sm leading-relaxed bg-black/[0.015] dark:bg-white/[0.02] focus:outline-none"></textarea>
-            <div class="flex justify-between items-center">
+            <div class="flex justify-between items-center flex-wrap gap-2">
               <span class="text-[11px] text-muted-custom">修改內容會自動儲存至本書檔案</span>
-              <button onclick="copyTextToClipboard(document.getElementById('final-essay-output').value, '讀後感文章已複製！')" class="text-xs accent-text hover:underline flex items-center gap-1">
-                <i data-lucide="copy" class="w-3 h-3"></i> 複製讀後感全文
-              </button>
+              <div class="flex items-center gap-3">
+                <button onclick="openExportNotesModal()" class="text-xs accent-text hover:underline flex items-center gap-1 font-bold">
+                  <i data-lucide="download" class="w-3.5 h-3.5"></i> 自訂格式匯出完整筆記
+                </button>
+                <button onclick="copyTextToClipboard(document.getElementById('final-essay-output').value, '讀後感文章已複製！')" class="text-xs accent-text hover:underline flex items-center gap-1">
+                  <i data-lucide="copy" class="w-3 h-3"></i> 複製讀後感全文
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -678,6 +769,105 @@
       </div>
 
     </main>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- 彈窗 0：全能筆記匯出挑選視窗 (PDF / Word / Markdown / TXT + 內容勾選)  -->
+  <!-- ===================================================================== -->
+  <div id="export-notes-modal" class="fixed inset-0 bg-black/45 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4 no-print">
+    <div class="card-surface border border-custom rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5">
+      <div class="flex items-center justify-between border-b border-custom pb-3">
+        <div class="flex items-center gap-2">
+          <i data-lucide="file-output" class="w-5 h-5 accent-text"></i>
+          <div>
+            <h3 class="font-bold text-base">📤 匯出《<span id="export-modal-book-title"></span>》閱讀筆記</h3>
+            <p class="text-[11px] text-muted-custom">選擇偏好的檔案格式與要收錄的思考足跡</p>
+          </div>
+        </div>
+        <button onclick="closeExportNotesModal()" class="p-1 rounded-lg hover:bg-black/5"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <!-- 步驟 1：挑選匯出檔案格式 -->
+      <div class="space-y-2">
+        <label class="block text-xs font-bold text-muted-custom">1. 選擇匯出檔案格式：</label>
+        <div class="grid grid-cols-2 gap-2.5 text-xs">
+          <button type="button" onclick="selectExportFormat('pdf')" id="fmt-btn-pdf" class="export-fmt-btn p-3 rounded-2xl border-2 accent-border accent-bg-soft text-left flex items-center gap-2.5 transition-all">
+            <span class="text-xl">📕</span>
+            <div>
+              <div class="font-bold">PDF 檔案 (.pdf)</div>
+              <div class="text-[11px] opacity-80">精緻排版・適合閱讀列印</div>
+            </div>
+          </button>
+          <button type="button" onclick="selectExportFormat('word')" id="fmt-btn-word" class="export-fmt-btn p-3 rounded-2xl border border-custom text-left flex items-center gap-2.5 hover:opacity-85 transition-all">
+            <span class="text-xl">📘</span>
+            <div>
+              <div class="font-bold">Word 文件 (.doc)</div>
+              <div class="text-[11px] text-muted-custom">可自由二次編輯排版</div>
+            </div>
+          </button>
+          <button type="button" onclick="selectExportFormat('md')" id="fmt-btn-md" class="export-fmt-btn p-3 rounded-2xl border border-custom text-left flex items-center gap-2.5 hover:opacity-85 transition-all">
+            <span class="text-xl">📝</span>
+            <div>
+              <div class="font-bold">Markdown (.md)</div>
+              <div class="text-[11px] text-muted-custom">Notion / Obsidian 通用</div>
+            </div>
+          </button>
+          <button type="button" onclick="selectExportFormat('txt')" id="fmt-btn-txt" class="export-fmt-btn p-3 rounded-2xl border border-custom text-left flex items-center gap-2.5 hover:opacity-85 transition-all">
+            <span class="text-xl">📄</span>
+            <div>
+              <div class="font-bold">純文字檔 (.txt)</div>
+              <div class="text-[11px] text-muted-custom">輕量純淨・任何裝置開啟</div>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- 步驟 2：勾選要包含的筆記區塊 -->
+      <div class="space-y-2 pt-2 border-t border-custom">
+        <label class="block text-xs font-bold text-muted-custom">2. 勾選要包含的內容區塊：</label>
+        <div class="space-y-2 text-xs">
+          <label class="flex items-center justify-between p-2.5 rounded-xl border border-custom cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.02]">
+            <div class="flex items-center gap-2.5">
+              <input id="exp-inc-pre" type="checkbox" checked class="w-4 h-4 rounded accent-current" />
+              <span class="font-medium">🎯 讀前 4 個無劇透思考題</span>
+            </div>
+            <span id="exp-count-pre" class="text-[11px] text-muted-custom">4 題</span>
+          </label>
+
+          <label class="flex items-center justify-between p-2.5 rounded-xl border border-custom cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.02]">
+            <div class="flex items-center gap-2.5">
+              <input id="exp-inc-notes" type="checkbox" checked class="w-4 h-4 rounded accent-current" />
+              <span class="font-medium">📌 彩色索引貼與靈感批注</span>
+            </div>
+            <span id="exp-count-notes" class="text-[11px] text-muted-custom">0 則</span>
+          </label>
+
+          <label class="flex items-center justify-between p-2.5 rounded-xl border border-custom cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.02]">
+            <div class="flex items-center gap-2.5">
+              <input id="exp-inc-reviews" type="checkbox" checked class="w-4 h-4 rounded accent-current" />
+              <span class="font-medium">🌱 每日一句話複盤打卡紀錄</span>
+            </div>
+            <span id="exp-count-reviews" class="text-[11px] text-muted-custom">0 筆</span>
+          </label>
+
+          <label class="flex items-center justify-between p-2.5 rounded-xl border border-custom cursor-pointer hover:bg-black/[0.02] dark:hover:bg-white/[0.02]">
+            <div class="flex items-center gap-2.5">
+              <input id="exp-inc-essay" type="checkbox" checked class="w-4 h-4 rounded accent-current" />
+              <span class="font-medium">✍️ 讀後感文章</span>
+            </div>
+            <span id="exp-count-essay" class="text-[11px] text-muted-custom">已撰寫</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-3 border-t border-custom">
+        <button onclick="closeExportNotesModal()" class="px-4 py-2 rounded-xl text-xs text-muted-custom">取消</button>
+        <button onclick="executeNotesExport()" class="px-5 py-2.5 rounded-xl accent-bg text-xs font-bold shadow-md hover:opacity-95 flex items-center gap-1.5">
+          <i data-lucide="download" class="w-4 h-4"></i>
+          <span id="btn-execute-export-label">立即匯出 PDF</span>
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- ===================================================================== -->
@@ -726,7 +916,6 @@
           </div>
         </div>
 
-        <!-- 選擇預設徽章或上傳書封圖片 -->
         <div class="space-y-2 pt-1">
           <label class="block text-xs font-bold text-muted-custom">封面徽章圖樣（選 Emoji 或上傳封面圖）</label>
           <div class="flex items-center gap-2">
@@ -766,7 +955,6 @@
         <button onclick="closeWallpaperModal()" class="p-1 rounded-lg hover:bg-black/5"><i data-lucide="x" class="w-5 h-5"></i></button>
       </div>
 
-      <!-- 內建 4 款氛圍底圖 -->
       <div class="space-y-2">
         <label class="block text-xs font-bold text-muted-custom">1. 選擇內建療癒書房氛圍：</label>
         <div class="grid grid-cols-2 gap-2.5 text-xs">
@@ -801,7 +989,6 @@
         </div>
       </div>
 
-      <!-- 上傳自訂本地圖片桌布 -->
       <div class="space-y-2 pt-2 border-t border-custom">
         <label class="block text-xs font-bold text-muted-custom">2. 自行上傳喜歡的圖案 / 插畫桌布：</label>
         <label class="cursor-pointer w-full py-3.5 px-4 rounded-2xl border-2 border-dashed border-custom hover:opacity-80 flex flex-col items-center justify-center gap-1 text-xs text-center">
@@ -812,7 +999,6 @@
         </label>
       </div>
 
-      <!-- 桌布遮罩與毛玻璃微調 -->
       <div class="space-y-3 pt-2 border-t border-custom text-xs">
         <div>
           <div class="flex justify-between text-muted-custom mb-1">
@@ -860,6 +1046,74 @@
           <span class="font-medium">點擊選擇手機或電腦圖片</span>
           <input type="file" accept="image/*" class="hidden" onchange="handleBadgeImageUpload(event)" />
         </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- 彈窗 4：資料備份與還原中心 Modal                                       -->
+  <!-- ===================================================================== -->
+  <div id="backup-modal" class="fixed inset-0 bg-black/45 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4 no-print">
+    <div class="card-surface border border-custom rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5">
+      <div class="flex items-center justify-between border-b border-custom pb-3">
+        <div class="flex items-center gap-2">
+          <i data-lucide="database-backup" class="w-5 h-5 accent-text"></i>
+          <h3 class="font-bold text-base">💾 書房資料備份與還原中心</h3>
+        </div>
+        <button onclick="closeBackupModal()" class="p-1 rounded-lg hover:bg-black/5"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <p class="text-xs text-muted-custom leading-relaxed">
+        所有書籍與筆記皆安全儲存在你的瀏覽器本機中。建議定期下載完整備份檔，以便在更換電腦或手機時一鍵還原整個書房！
+      </p>
+
+      <div class="space-y-3">
+        <button onclick="exportAllBooksJson()" class="w-full p-3.5 rounded-2xl accent-bg font-bold text-xs flex items-center justify-center gap-2 shadow-sm hover:opacity-95">
+          <i data-lucide="download" class="w-4 h-4"></i>
+          <span>下載完整書房備份檔 (.json)</span>
+        </button>
+
+        <label class="cursor-pointer w-full p-3.5 rounded-2xl border-2 border-dashed border-custom hover:opacity-80 flex items-center justify-center gap-2 text-xs font-bold">
+          <i data-lucide="upload" class="w-4 h-4 accent-text"></i>
+          <span>從備份檔還原書房資料 (.json)</span>
+          <input type="file" accept=".json" class="hidden" onchange="importAllBooksJson(event)" />
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- 彈窗 5：沉浸閱讀專注計時器 Modal                                       -->
+  <!-- ===================================================================== -->
+  <div id="timer-modal" class="fixed inset-0 bg-black/45 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4 no-print">
+    <div class="card-surface border border-custom rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-5 text-center">
+      <div class="flex items-center justify-between border-b border-custom pb-3">
+        <div class="flex items-center gap-2">
+          <i data-lucide="timer" class="w-5 h-5 accent-text"></i>
+          <h3 class="font-bold text-base">⏳ 沉浸閱讀專注計時器</h3>
+        </div>
+        <button onclick="toggleFocusTimerModal()" class="p-1 rounded-lg hover:bg-black/5"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <div class="py-2">
+        <div id="timer-display" class="text-5xl font-bold tracking-wider font-mono accent-text">25:00</div>
+        <p class="text-xs text-muted-custom mt-2">放下手機通知，給自己一段純粹與書對話的靜謐時光</p>
+      </div>
+
+      <div class="flex justify-center gap-2 text-xs">
+        <button onclick="setTimerMinutes(15)" class="px-3 py-1.5 rounded-xl border border-custom hover:opacity-80">15 分鐘</button>
+        <button onclick="setTimerMinutes(25)" class="px-3 py-1.5 rounded-xl border border-custom hover:opacity-80">25 分鐘</button>
+        <button onclick="setTimerMinutes(45)" class="px-3 py-1.5 rounded-xl border border-custom hover:opacity-80">45 分鐘</button>
+      </div>
+
+      <div class="flex justify-center gap-3 pt-2">
+        <button id="btn-timer-start" onclick="startOrPauseTimer()" class="px-6 py-2.5 rounded-2xl accent-bg font-bold text-xs shadow-sm hover:opacity-90 flex items-center gap-1.5">
+          <i data-lucide="play" class="w-4 h-4"></i>
+          <span id="label-timer-start">開始專注</span>
+        </button>
+        <button onclick="resetTimer()" class="px-4 py-2.5 rounded-2xl border border-custom text-xs font-medium hover:opacity-80">
+          重設
+        </button>
       </div>
     </div>
   </div>
@@ -943,7 +1197,7 @@
   </aside>
 
   <!-- ===================================================================== -->
-  <!-- 紙本書專屬列印排版 (平時隱藏，列印時顯示)                              -->
+  <!-- 列印區塊 A：紙本書隨身思維導引單                                       -->
   <!-- ===================================================================== -->
   <div id="print-sheet" class="hidden">
     <div style="border: 2px solid #222; border-radius: 16px; padding: 24px; max-width: 720px; margin: 0 auto; font-family: 'Noto Serif TC', serif;">
@@ -980,12 +1234,17 @@
     </div>
   </div>
 
+  <!-- ===================================================================== -->
+  <!-- 列印區塊 B：PDF 完整閱讀手札排版視圖 (選擇匯出 PDF 時動態填充)         -->
+  <!-- ===================================================================== -->
+  <div id="pdf-export-sheet" class="hidden"></div>
+
   <script>
     // ==================== 多書庫資料模型與預設範例書 ====================
-    const STORAGE_KEY = 'ai_reading_studio_v2';
+    const STORAGE_KEY = 'ai_reading_studio_v3';
 
     const DEFAULT_STATE = {
-      activeView: 'library', // 'library' | 'workspace'
+      activeView: 'library',
       activeBookId: 'book_1',
       theme: 'cream',
       accentColor: '#D97757',
@@ -993,7 +1252,7 @@
       fontSize: 16,
       texture: 'texture-paper',
       wallpaper: {
-        type: 'preset', // 'preset' | 'custom'
+        type: 'preset',
         presetClass: 'wallpaper-coffee',
         customImage: '',
         overlayOpacity: 35,
@@ -1006,7 +1265,8 @@
           author: '金銀珠',
           genre: 'growth',
           readingMode: 'paper',
-          status: 'reading', // 'reading' | 'completed'
+          status: 'reading',
+          currentPage: 84,
           completedDate: '',
           badgeType: 'emoji',
           badgeEmoji: '🌿',
@@ -1051,6 +1311,7 @@
           genre: 'nonfiction',
           readingMode: 'ebook',
           status: 'reading',
+          currentPage: 56,
           completedDate: '',
           badgeType: 'emoji',
           badgeEmoji: '✨',
@@ -1088,6 +1349,7 @@
           genre: 'classic',
           readingMode: 'paper',
           status: 'completed',
+          currentPage: 384,
           completedDate: '2026-10-28',
           badgeType: 'emoji',
           badgeEmoji: '🏛️',
@@ -1123,12 +1385,18 @@
 
     let appState = loadState();
     let selectedNoteTagId = 't1';
+    let filterNoteTagId = 'all';
+    let editingNoteId = null;
     let currentSelectedEbookQuote = '';
-    // 新增書籍暫存狀態
     let tempNewBookEmoji = '📘';
     let tempNewBookCoverImg = '';
+    let selectedExportFormat = 'pdf';
 
-    // 書籍類型對應的筆記建議庫
+    // 番茄鐘狀態
+    let timerSeconds = 25 * 60;
+    let timerInterval = null;
+    let isTimerRunning = false;
+
     const GENRE_ADVICE_MAP = {
       growth: {
         title: '🌱 散文與自我成長類 — 筆記建議方向',
@@ -1167,7 +1435,7 @@
     // ==================== 資料讀取與儲存工具 ====================
     function loadState() {
       try {
-        const saved = localStorage.getItem(STORAGE_KEY);
+        const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('ai_reading_studio_v2');
         if (saved) {
           const parsed = JSON.parse(saved);
           if (parsed && Array.isArray(parsed.books) && parsed.books.length > 0) {
@@ -1184,7 +1452,7 @@
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
       } catch (e) {
-        showToast('儲存空間已滿（可能是上傳的圖片過大），建議換一張較小的圖片。');
+        showToast('儲存空間已滿（可能是上傳的圖片過大），建議先下載備份檔或換較小的圖片。');
       }
     }
 
@@ -1202,7 +1470,7 @@
         el.style.opacity = '0';
         el.style.transform = 'translateY(8px)';
         setTimeout(() => el.remove(), 300);
-      }, 2600);
+      }, 2800);
     }
 
     function copyTextToClipboard(text, successMsg = '已複製到剪貼簿！') {
@@ -1225,7 +1493,6 @@
       document.body.removeChild(textarea);
     }
 
-    // 圖片壓縮處理 (用於封面徽章與自訂桌布)
     function compressImageFile(file, maxDimension, quality, callback) {
       const reader = new FileReader();
       reader.onload = function(e) {
@@ -1245,6 +1512,298 @@
       reader.readAsDataURL(file);
     }
 
+    // ==================== 全能筆記匯出挑選視窗 (PDF / Word / MD / TXT) ====================
+    function openExportNotesModal() {
+      const book = getCurrentBook();
+      document.getElementById('export-modal-book-title').textContent = book.title;
+      document.getElementById('exp-count-pre').textContent = `${book.preQuestions?.length || 0} 題`;
+      document.getElementById('exp-count-notes').textContent = `${book.notes?.length || 0} 則`;
+      document.getElementById('exp-count-reviews').textContent = `${book.reviews?.length || 0} 筆`;
+      document.getElementById('exp-count-essay').textContent = book.finalEssay?.trim() ? '已撰寫' : '尚未撰寫';
+
+      selectExportFormat(selectedExportFormat);
+      document.getElementById('export-notes-modal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeExportNotesModal() {
+      document.getElementById('export-notes-modal').classList.add('hidden');
+    }
+
+    function selectExportFormat(fmt) {
+      selectedExportFormat = fmt;
+      const labels = {
+        pdf: '立即匯出 PDF',
+        word: '下載 Word 文件 (.doc)',
+        md: '下載 Markdown (.md)',
+        txt: '下載純文字檔 (.txt)'
+      };
+      document.getElementById('btn-execute-export-label').textContent = labels[fmt] || '立即匯出';
+
+      ['pdf', 'word', 'md', 'txt'].forEach(f => {
+        const btn = document.getElementById(`fmt-btn-${f}`);
+        if (f === fmt) {
+          btn.className = 'export-fmt-btn p-3 rounded-2xl border-2 accent-border accent-bg-soft text-left flex items-center gap-2.5 transition-all';
+        } else {
+          btn.className = 'export-fmt-btn p-3 rounded-2xl border border-custom text-left flex items-center gap-2.5 hover:opacity-85 transition-all';
+        }
+      });
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function executeNotesExport() {
+      const book = getCurrentBook();
+      const opts = {
+        incPre: document.getElementById('exp-inc-pre').checked,
+        incNotes: document.getElementById('exp-inc-notes').checked,
+        incReviews: document.getElementById('exp-inc-reviews').checked,
+        incEssay: document.getElementById('exp-inc-essay').checked
+      };
+
+      if (!opts.incPre && !opts.incNotes && !opts.incReviews && !opts.incEssay) {
+        showToast('請至少勾選一項要匯出的內容區塊喔！');
+        return;
+      }
+
+      closeExportNotesModal();
+
+      if (selectedExportFormat === 'md') {
+        downloadMarkdownFile(book, opts);
+      } else if (selectedExportFormat === 'txt') {
+        downloadTxtFile(book, opts);
+      } else if (selectedExportFormat === 'word') {
+        downloadWordFile(book, opts);
+      } else if (selectedExportFormat === 'pdf') {
+        exportPdfFile(book, opts);
+      }
+    }
+
+    // 1. 生成 Markdown 格式並下載
+    function downloadMarkdownFile(book, opts) {
+      const totalP = book.plan?.totalPages || 240;
+      const currP = book.currentPage || 0;
+      let md = `# 《${book.title}》閱讀手札與全攻略\n\n`;
+      md += `- **作者**：${book.author}\n`;
+      md += `- **閱讀狀態**：${book.status === 'completed' ? `已完讀 (${book.completedDate})` : `閱讀中 (${currP} / ${totalP} 頁)`}\n`;
+      md += `- **匯出日期**：${new Date().toISOString().slice(0, 10)}\n\n---\n\n`;
+
+      if (opts.incPre && book.preQuestions?.length > 0) {
+        md += `## 🎯 讀前 4 個無劇透思考題\n\n`;
+        book.preQuestions.forEach((q, idx) => { md += `${idx + 1}. ${q}\n`; });
+        md += `\n`;
+      }
+
+      if (opts.incNotes) {
+        md += `## 📌 彩色索引貼與靈感批注 (${book.notes.length} 則)\n\n`;
+        if (book.notes.length === 0) {
+          md += `（尚無索引貼紀錄）\n\n`;
+        } else {
+          book.notes.forEach(n => {
+            const tag = book.tags.find(t => t.id === n.tagId);
+            md += `### [${tag ? tag.name : '筆記'}] ${n.page} (${n.createdAt})\n`;
+            if (n.quote) md += `> 「${n.quote}」\n\n`;
+            if (n.thought) md += `${n.thought}\n\n`;
+          });
+        }
+      }
+
+      if (opts.incReviews) {
+        md += `## 🌱 每日一句話複盤打卡紀錄 (${book.reviews.length} 筆)\n\n`;
+        if (book.reviews.length === 0) {
+          md += `（尚無複盤打卡紀錄）\n\n`;
+        } else {
+          book.reviews.forEach(r => {
+            md += `- **[${r.date}]** 觸動：${r.touch} ｜ 微行動：${r.action}\n`;
+          });
+          md += `\n`;
+        }
+      }
+
+      if (opts.incEssay) {
+        md += `## ✍️ 讀後感文章\n\n${book.finalEssay?.trim() || '（尚未撰寫讀後感）'}\n`;
+      }
+
+      triggerBlobDownload(md, 'text/markdown;charset=utf-8', `${book.title}_閱讀手札.md`);
+      showToast(`已匯出《${book.title}》Markdown 筆記！`);
+    }
+
+    // 2. 生成純文字 TXT 格式並下載
+    function downloadTxtFile(book, opts) {
+      const totalP = book.plan?.totalPages || 240;
+      const currP = book.currentPage || 0;
+      let txt = `========================================\n`;
+      txt += `《${book.title}》閱讀手札與全攻略\n`;
+      txt += `作者：${book.author}\n`;
+      txt += `狀態：${book.status === 'completed' ? `已完讀 (${book.completedDate})` : `閱讀中 (${currP} / ${totalP} 頁)`}\n`;
+      txt += `========================================\n\n`;
+
+      if (opts.incPre && book.preQuestions?.length > 0) {
+        txt += `【讀前 4 個無劇透思考題】\n`;
+        book.preQuestions.forEach((q, idx) => { txt += `${idx + 1}. ${q}\n`; });
+        txt += `\n----------------------------------------\n\n`;
+      }
+
+      if (opts.incNotes) {
+        txt += `【彩色索引貼與靈感批注 (${book.notes.length} 則)】\n\n`;
+        if (book.notes.length === 0) {
+          txt += `（尚無索引貼紀錄）\n\n`;
+        } else {
+          book.notes.forEach((n, idx) => {
+            const tag = book.tags.find(t => t.id === n.tagId);
+            txt += `(${idx + 1}) [${tag ? tag.name : '筆記'}] ${n.page} (${n.createdAt})\n`;
+            if (n.quote) txt += `    原文摘錄：「${n.quote}」\n`;
+            if (n.thought) txt += `    個人批注：${n.thought}\n`;
+            txt += `\n`;
+          });
+        }
+        txt += `----------------------------------------\n\n`;
+      }
+
+      if (opts.incReviews) {
+        txt += `【每日一句話複盤打卡紀錄 (${book.reviews.length} 筆)】\n\n`;
+        if (book.reviews.length === 0) {
+          txt += `（尚無複盤打卡紀錄）\n\n`;
+        } else {
+          book.reviews.forEach(r => {
+            txt += `• [${r.date}] 觸動：${r.touch}\n             微行動：${r.action}\n`;
+          });
+          txt += `\n`;
+        }
+        txt += `----------------------------------------\n\n`;
+      }
+
+      if (opts.incEssay) {
+        txt += `【讀後感文章】\n\n${book.finalEssay?.trim() || '（尚未撰寫讀後感）'}\n`;
+      }
+
+      triggerBlobDownload(txt, 'text/plain;charset=utf-8', `${book.title}_閱讀手札.txt`);
+      showToast(`已匯出《${book.title}》TXT 純文字筆記！`);
+    }
+
+    // 建構共用的精緻排版 HTML 內容 (供 Word 與 PDF 使用)
+    function buildRichDocumentInnerHtml(book, opts) {
+      const totalP = book.plan?.totalPages || 240;
+      const currP = book.currentPage || 0;
+      const statusText = book.status === 'completed' ? `已完讀（${book.completedDate}）` : `閱讀中（${currP} / ${totalP} 頁）`;
+
+      let html = `
+        <div style="font-family: 'Noto Serif TC', 'Microsoft JhengHei', serif; color: #222; line-height: 1.75; max-width: 720px; margin: 0 auto;">
+          <div style="border-bottom: 2px solid #D97757; padding-bottom: 14px; margin-bottom: 22px;">
+            <div style="font-size: 11px; letter-spacing: 2px; color: #888; text-transform: uppercase;">AI READING STUDIO ・ 個人書房閱讀手札</div>
+            <h1 style="font-size: 24px; font-weight: bold; margin: 6px 0 4px 0; color: #1A1A1A;">《${escapeHtml(book.title)}》</h1>
+            <div style="font-size: 13px; color: #555;">作者：${escapeHtml(book.author)} ｜ 狀態：${statusText} ｜ 匯出日期：${new Date().toISOString().slice(0, 10)}</div>
+          </div>
+      `;
+
+      if (opts.incPre && book.preQuestions?.length > 0) {
+        html += `
+          <div style="margin-bottom: 24px;">
+            <h2 style="font-size: 16px; font-weight: bold; color: #D97757; border-left: 4px solid #D97757; padding-left: 10px; margin-bottom: 10px;">🎯 讀前 4 個無劇透思考題</h2>
+            <ol style="padding-left: 22px; margin: 0; font-size: 14px;">
+              ${book.preQuestions.map(q => `<li style="margin-bottom: 6px;">${escapeHtml(q)}</li>`).join('')}
+            </ol>
+          </div>
+        `;
+      }
+
+      if (opts.incNotes) {
+        html += `
+          <div style="margin-bottom: 24px;">
+            <h2 style="font-size: 16px; font-weight: bold; color: #D97757; border-left: 4px solid #D97757; padding-left: 10px; margin-bottom: 12px;">📌 彩色索引貼與靈感批注（共 ${book.notes.length} 則）</h2>
+        `;
+        if (book.notes.length === 0) {
+          html += `<p style="font-size: 13px; color: #777;">（尚無索引貼紀錄）</p>`;
+        } else {
+          book.notes.forEach(n => {
+            const tag = book.tags.find(t => t.id === n.tagId) || { color: '#D97757', name: '筆記' };
+            html += `
+              <div style="border: 1px solid #E5E0D8; border-left: 5px solid ${tag.color}; border-radius: 8px; padding: 12px 14px; margin-bottom: 12px; background-color: #FAF9F6; page-break-inside: avoid;">
+                <div style="font-size: 12px; font-weight: bold; color: ${tag.color}; margin-bottom: 6px;">
+                  【${escapeHtml(tag.name)}】 <span style="color: #666; font-weight: normal;">${escapeHtml(n.page)} ・ ${escapeHtml(n.createdAt)}</span>
+                </div>
+                ${n.quote ? `<div style="font-style: italic; color: #555; border-left: 2px solid #CCC; padding-left: 10px; margin-bottom: 6px; font-size: 13px;">「${escapeHtml(n.quote)}」</div>` : ''}
+                ${n.thought ? `<div style="font-size: 14px; color: #222;">${escapeHtml(n.thought)}</div>` : ''}
+              </div>
+            `;
+          });
+        }
+        html += `</div>`;
+      }
+
+      if (opts.incReviews) {
+        html += `
+          <div style="margin-bottom: 24px;">
+            <h2 style="font-size: 16px; font-weight: bold; color: #D97757; border-left: 4px solid #D97757; padding-left: 10px; margin-bottom: 10px;">🌱 每日一句話複盤打卡紀錄（共 ${book.reviews.length} 筆）</h2>
+        `;
+        if (book.reviews.length === 0) {
+          html += `<p style="font-size: 13px; color: #777;">（尚無複盤打卡紀錄）</p>`;
+        } else {
+          html += `<ul style="padding-left: 18px; margin: 0; font-size: 13.5px;">`;
+          book.reviews.forEach(r => {
+            html += `<li style="margin-bottom: 8px;"><strong>[${escapeHtml(r.date)}]</strong> 觸動：${escapeHtml(r.touch)}<br/><span style="color: #555;">微行動：${escapeHtml(r.action)}</span></li>`;
+          });
+          html += `</ul>`;
+        }
+        html += `</div>`;
+      }
+
+      if (opts.incEssay) {
+        const essayHtml = book.finalEssay?.trim()
+          ? escapeHtml(book.finalEssay.trim()).replace(/\n/g, '<br/>')
+          : '<span style="color: #777;">（尚未撰寫讀後感）</span>';
+        html += `
+          <div style="margin-bottom: 16px;">
+            <h2 style="font-size: 16px; font-weight: bold; color: #D97757; border-left: 4px solid #D97757; padding-left: 10px; margin-bottom: 10px;">✍️ 讀後感文章</h2>
+            <div style="font-size: 14.5px; text-align: justify; background: #FFF; padding: 12px; border: 1px solid #EEE; border-radius: 8px;">${essayHtml}</div>
+          </div>
+        `;
+      }
+
+      html += `</div>`;
+      return html;
+    }
+
+    // 3. 生成 Word (.doc) 檔案並下載
+    function downloadWordFile(book, opts) {
+      const innerHtml = buildRichDocumentInnerHtml(book, opts);
+      const wordDoc = `
+        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+        <head><meta charset='utf-8'><title>${escapeHtml(book.title)}</title></head>
+        <body>${innerHtml}</body>
+        </html>
+      `;
+      triggerBlobDownload('\ufeff' + wordDoc, 'application/msword;charset=utf-8', `${book.title}_閱讀手札.doc`);
+      showToast(`已匯出《${book.title}》Word 文件 (.doc)！`);
+    }
+
+    // 4. 生成精緻 PDF（觸發瀏覽器另存為 PDF）
+    function exportPdfFile(book, opts) {
+      const pdfSheet = document.getElementById('pdf-export-sheet');
+      pdfSheet.innerHTML = buildRichDocumentInnerHtml(book, opts);
+      document.body.classList.remove('print-mode-guide');
+      document.body.classList.add('print-mode-notes');
+
+      showToast('正在開啟 PDF 排版視窗，請在目的地選擇「另存為 PDF」即可！');
+      setTimeout(() => {
+        window.print();
+        document.body.classList.remove('print-mode-notes');
+      }, 250);
+    }
+
+    function triggerBlobDownload(content, mimeType, filename) {
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
     // ==================== 視圖切換：我的書房 vs 單本閱讀工作區 ====================
     function navigateToLibrary() {
       appState.activeView = 'library';
@@ -1260,6 +1819,8 @@
       if (!target) return;
       appState.activeBookId = bookId;
       appState.activeView = 'workspace';
+      filterNoteTagId = 'all';
+      editingNoteId = null;
       saveState();
 
       document.getElementById('view-library').classList.add('hidden');
@@ -1268,23 +1829,43 @@
       lucide.createIcons();
     }
 
-    // ==================== 視圖 A：我的書房（書架、完讀書牆、自訂桌布） ====================
+    // ==================== 視圖 A：我的書房（儀表板、搜尋、書架、完讀書牆） ====================
     function renderLibraryView() {
       applyWallpaperStyles();
 
-      const readingBooks = appState.books.filter(b => b.status !== 'completed');
-      const completedBooks = appState.books.filter(b => b.status === 'completed');
+      const allReading = appState.books.filter(b => b.status !== 'completed');
+      const allCompleted = appState.books.filter(b => b.status === 'completed');
+      const totalNotes = appState.books.reduce((sum, b) => sum + (b.notes?.length || 0), 0);
+      const totalReviews = appState.books.reduce((sum, b) => sum + (b.reviews?.length || 0), 0);
 
-      document.getElementById('library-stats-pill').textContent = `在讀 ${readingBooks.length} 本・已讀完 ${completedBooks.length} 本`;
+      document.getElementById('library-stats-pill').textContent = `在讀 ${allReading.length} 本・已讀完 ${allCompleted.length} 本`;
+      document.getElementById('stat-reading-count').innerHTML = `${allReading.length} <span class="text-xs font-normal text-muted-custom">本</span>`;
+      document.getElementById('stat-completed-count').innerHTML = `${allCompleted.length} <span class="text-xs font-normal text-muted-custom">本</span>`;
+      document.getElementById('stat-total-notes').innerHTML = `${totalNotes} <span class="text-xs font-normal text-muted-custom">則</span>`;
+      document.getElementById('stat-total-reviews').innerHTML = `${totalReviews} <span class="text-xs font-normal text-muted-custom">次</span>`;
 
-      // 渲染在讀書架
+      const query = (document.getElementById('library-search-input')?.value || '').trim().toLowerCase();
+      const genreFilter = document.getElementById('library-genre-filter')?.value || 'all';
+
+      const filterFn = (book) => {
+        if (genreFilter !== 'all' && book.genre !== genreFilter) return false;
+        if (!query) return true;
+        const inMeta = (book.title || '').toLowerCase().includes(query) || (book.author || '').toLowerCase().includes(query);
+        const inNotes = (book.notes || []).some(n => (n.quote || '').toLowerCase().includes(query) || (n.thought || '').toLowerCase().includes(query));
+        const inEssay = (book.finalEssay || '').toLowerCase().includes(query);
+        return inMeta || inNotes || inEssay;
+      };
+
+      const readingBooks = allReading.filter(filterFn);
+      const completedBooks = allCompleted.filter(filterFn);
+
       const readingGrid = document.getElementById('reading-books-grid');
       if (readingBooks.length === 0) {
         readingGrid.innerHTML = `
           <div class="col-span-full glass-card border border-dashed rounded-3xl p-8 text-center space-y-3">
             <div class="text-3xl">📚</div>
-            <p class="text-sm font-bold">目前書架上沒有正在閱讀的書</p>
-            <button onclick="openNewBookModal()" class="px-4 py-2 rounded-xl accent-bg text-xs font-bold">＋ 立即新增一本書</button>
+            <p class="text-sm font-bold">${query || genreFilter !== 'all' ? '找不到符合篩選條件的在讀書籍' : '目前書架上沒有正在閱讀的書'}</p>
+            ${!query && genreFilter === 'all' ? `<button onclick="openNewBookModal()" class="px-4 py-2 rounded-xl accent-bg text-xs font-bold">＋ 立即新增一本書</button>` : ''}
           </div>
         `;
       } else {
@@ -1294,9 +1875,12 @@
             : `<span>${book.badgeEmoji || '📖'}</span>`;
           const modeLabel = book.readingMode === 'ebook' ? '📱 電子書' : '📖 紙本書';
           const tagDots = book.tags.map(t => `<span class="w-2.5 h-2.5 rounded-full inline-block" style="background-color:${t.color}" title="${t.name}"></span>`).join('');
+          const totalP = Math.max(1, book.plan?.totalPages || 240);
+          const currP = Math.min(totalP, Math.max(0, book.currentPage || 0));
+          const pct = Math.round((currP / totalP) * 100);
 
           return `
-            <div onclick="openBookWorkspace('${book.id}')" class="cursor-pointer glass-card border rounded-3xl p-5 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all flex flex-col justify-between gap-4 group relative">
+            <div onclick="openBookWorkspace('${book.id}')" class="cursor-pointer glass-card border rounded-3xl p-5 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all flex flex-col justify-between gap-3.5 group relative">
               <div class="flex items-start gap-3.5">
                 <div class="w-14 h-16 rounded-2xl border border-custom flex items-center justify-center text-2xl shrink-0 overflow-hidden bg-amber-50/60 shadow-2xs">
                   ${badgeHtml}
@@ -1311,7 +1895,17 @@
                 </div>
               </div>
 
-              <div class="pt-3 border-t border-custom/60 flex items-center justify-between text-xs">
+              <div class="space-y-1">
+                <div class="flex justify-between text-[11px] text-muted-custom">
+                  <span>進度 ${currP} / ${totalP} 頁</span>
+                  <span class="font-bold accent-text">${pct}%</span>
+                </div>
+                <div class="w-full h-1.5 rounded-full bg-black/5 dark:bg-white/10 overflow-hidden">
+                  <div class="h-full accent-bg rounded-full" style="width: ${pct}%;"></div>
+                </div>
+              </div>
+
+              <div class="pt-2.5 border-t border-custom/60 flex items-center justify-between text-xs">
                 <div class="flex items-center gap-2 text-muted-custom">
                   <div class="flex items-center gap-1">${tagDots}</div>
                   <span>・${book.notes.length} 則索引貼</span>
@@ -1325,12 +1919,11 @@
         }).join('');
       }
 
-      // 渲染過往完讀書牆
       const completedGrid = document.getElementById('completed-books-grid');
       if (completedBooks.length === 0) {
         completedGrid.innerHTML = `
           <div class="col-span-full glass-card border border-dashed rounded-3xl p-6 text-center text-xs text-muted-custom">
-            還沒有標記完讀的書籍。當你讀完一本書時，在工作區右上角點擊「標記已讀完」，就會自動收藏到這裡喔！
+            ${query || genreFilter !== 'all' ? '找不到符合篩選條件的已完讀書籍。' : '還沒有標記完讀的書籍。當你讀完一本書時，在工作區右上角點擊「標記已讀完」，就會自動收藏到這裡喔！'}
           </div>
         `;
       } else {
@@ -1365,6 +1958,7 @@
           `;
         }).join('');
       }
+      lucide.createIcons();
     }
 
     // 書房自訂桌布控制
@@ -1376,9 +1970,7 @@
       document.getElementById('wallpaper-modal').classList.remove('hidden');
     }
 
-    function closeWallpaperModal() {
-      document.getElementById('wallpaper-modal').classList.add('hidden');
-    }
+    function closeWallpaperModal() { document.getElementById('wallpaper-modal').classList.add('hidden'); }
 
     function selectPresetWallpaper(presetClass) {
       appState.wallpaper.type = 'preset';
@@ -1442,9 +2034,7 @@
       document.getElementById('new-book-modal').classList.remove('hidden');
     }
 
-    function closeNewBookModal() {
-      document.getElementById('new-book-modal').classList.add('hidden');
-    }
+    function closeNewBookModal() { document.getElementById('new-book-modal').classList.add('hidden'); }
 
     function selectNewBookEmoji(emoji) {
       tempNewBookEmoji = emoji;
@@ -1486,6 +2076,7 @@
         genre,
         readingMode,
         status: 'reading',
+        currentPage: 0,
         completedDate: '',
         badgeType: tempNewBookCoverImg ? 'image' : 'emoji',
         badgeEmoji: tempNewBookEmoji,
@@ -1529,12 +2120,93 @@
       showToast('已從書房移除該書籍');
     }
 
+    // ==================== 書房資料備份與還原 ====================
+    function openBackupModal() { document.getElementById('backup-modal').classList.remove('hidden'); }
+    function closeBackupModal() { document.getElementById('backup-modal').classList.add('hidden'); }
+
+    function exportAllBooksJson() {
+      const dataStr = JSON.stringify(appState, null, 2);
+      triggerBlobDownload(dataStr, 'application/json', `AI閱讀書房完整備份_${new Date().toISOString().slice(0, 10)}.json`);
+      showToast('完整書房 JSON 備份檔已開始下載！');
+    }
+
+    function importAllBooksJson(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (imported && Array.isArray(imported.books) && imported.books.length > 0) {
+            appState = { ...DEFAULT_STATE, ...imported };
+            saveState();
+            closeBackupModal();
+            navigateToLibrary();
+            showToast(`成功還原 ${appState.books.length} 本書籍與所有筆記！`);
+          } else {
+            showToast('備份檔格式不正確喔！');
+          }
+        } catch (err) {
+          showToast('讀取備份檔失敗，請確認檔案未損毀。');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // ==================== 沉浸閱讀專注計時器 ====================
+    function toggleFocusTimerModal() { document.getElementById('timer-modal').classList.toggle('hidden'); }
+
+    function setTimerMinutes(mins) {
+      if (isTimerRunning) startOrPauseTimer();
+      timerSeconds = mins * 60;
+      updateTimerDisplay();
+    }
+
+    function updateTimerDisplay() {
+      const m = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+      const s = String(timerSeconds % 60).padStart(2, '0');
+      const formatted = `${m}:${s}`;
+      document.getElementById('timer-display').textContent = formatted;
+      document.getElementById('header-timer-text').textContent = isTimerRunning ? formatted : '專注計時';
+    }
+
+    function startOrPauseTimer() {
+      const label = document.getElementById('label-timer-start');
+      if (isTimerRunning) {
+        clearInterval(timerInterval);
+        isTimerRunning = false;
+        label.textContent = '繼續專注';
+        updateTimerDisplay();
+      } else {
+        isTimerRunning = true;
+        label.textContent = '暫停計時';
+        timerInterval = setInterval(() => {
+          if (timerSeconds > 0) {
+            timerSeconds--;
+            updateTimerDisplay();
+          } else {
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            label.textContent = '開始專注';
+            updateTimerDisplay();
+            showToast('🎉 專注閱讀時間完成！記得寫下一句話複盤或更新閱讀頁數喔！');
+          }
+        }, 1000);
+      }
+    }
+
+    function resetTimer() {
+      if (isTimerRunning) startOrPauseTimer();
+      timerSeconds = 25 * 60;
+      document.getElementById('label-timer-start').textContent = '開始專注';
+      updateTimerDisplay();
+    }
+
     // ==================== 視圖 B：單本書籍專屬閱讀工作區 ====================
     function renderWorkspaceView() {
       const book = getCurrentBook();
       if (!book) return;
 
-      // 填充快速切換下拉選單
       const quickSelect = document.getElementById('ws-quick-book-switch');
       quickSelect.innerHTML = appState.books.map(b => `
         <option value="${b.id}" ${b.id === book.id ? 'selected' : ''}>
@@ -1548,7 +2220,6 @@
       document.getElementById('final-essay-output').value = book.finalEssay || '';
       document.getElementById('ebook-content-viewer').textContent = book.ebookText || '（點擊上方「匯入電子書檔」或「貼上段落文字」，即可在此沉浸閱讀並反白劃線貼標籤）';
 
-      // 完讀按鈕狀態
       const completeLabel = document.getElementById('label-toggle-complete');
       completeLabel.textContent = book.status === 'completed' ? '已讀完 (重讀)' : '標記已讀完';
 
@@ -1559,15 +2230,42 @@
       renderPreQuestions();
       renderStickyTags();
 
-      // 還原計畫數值
       document.getElementById('plan-total-pages').value = book.plan?.totalPages || 240;
       document.getElementById('plan-target-days').value = book.plan?.targetDays || 15;
       document.getElementById('plan-daily-mins').value = book.plan?.dailyMins || 15;
       document.getElementById('plan-goal-type').value = book.plan?.goalType || '精讀做筆記';
       calculateReadingPlan();
+      renderProgressBar();
 
       renderNotesList();
       renderReviewsList();
+    }
+
+    function renderProgressBar() {
+      const book = getCurrentBook();
+      const totalP = Math.max(1, book.plan?.totalPages || 240);
+      const currP = Math.min(totalP, Math.max(0, book.currentPage || 0));
+      const pct = Math.round((currP / totalP) * 100);
+      document.getElementById('ws-current-page-input').value = currP;
+      document.getElementById('ws-progress-percent-text').textContent = `${pct}% (${currP} / ${totalP} 頁)`;
+      document.getElementById('ws-progress-bar-fill').style.width = `${pct}%`;
+    }
+
+    function updateCurrentPageProgress(val) {
+      const book = getCurrentBook();
+      const totalP = Math.max(1, book.plan?.totalPages || 240);
+      book.currentPage = Math.min(totalP, Math.max(0, parseInt(val) || 0));
+      saveState();
+      renderProgressBar();
+    }
+
+    function quickIncrementPages(delta) {
+      const book = getCurrentBook();
+      const totalP = Math.max(1, book.plan?.totalPages || 240);
+      book.currentPage = Math.min(totalP, (book.currentPage || 0) + delta);
+      saveState();
+      renderProgressBar();
+      showToast(`閱讀進度已推進至第 ${book.currentPage} 頁！`);
     }
 
     function updateCurrentBookMeta() {
@@ -1576,7 +2274,6 @@
       book.author = document.getElementById('ws-book-author').value || '未知作者';
       saveState();
       syncDynamicBookTitles();
-      // 同步更新下拉選單文字
       const opt = document.querySelector(`#ws-quick-book-switch option[value="${book.id}"]`);
       if (opt) opt.textContent = `${book.status === 'completed' ? '🏆' : '📖'} ${book.title}`;
     }
@@ -1596,6 +2293,7 @@
         showToast(`已將《${book.title}》重新移回在讀書架`);
       } else {
         book.status = 'completed';
+        book.currentPage = book.plan?.totalPages || book.currentPage;
         book.completedDate = new Date().toISOString().slice(0, 10);
         showToast(`恭喜完讀《${book.title}》！已收藏至過往完讀書牆 🏆`);
       }
@@ -1603,7 +2301,6 @@
       renderWorkspaceView();
     }
 
-    // 單書徽章編輯
     function renderWorkspaceBadge() {
       const book = getCurrentBook();
       const emojiEl = document.getElementById('ws-badge-emoji');
@@ -1646,7 +2343,6 @@
       });
     }
 
-    // 紙本書 vs 電子書模式切換
     function switchReadingMode(mode, shouldSave = true) {
       const book = getCurrentBook();
       if (shouldSave) {
@@ -1671,9 +2367,7 @@
       }
     }
 
-    function toggleEbookPasteArea() {
-      document.getElementById('ebook-paste-box').classList.toggle('hidden');
-    }
+    function toggleEbookPasteArea() { document.getElementById('ebook-paste-box').classList.toggle('hidden'); }
 
     function applyEbookText() {
       const text = document.getElementById('ebook-raw-input').value.trim();
@@ -1722,7 +2416,6 @@
       showToast('已將電子書劃線帶入批注區，寫下你的想法吧！');
     }
 
-    // 紙本書專屬列印
     function prepareAndPrintGuide() {
       const book = getCurrentBook();
       document.getElementById('print-book-title').textContent = `《${book.title}》`;
@@ -1743,13 +2436,15 @@
       const perDay = Math.ceil(total / effectiveDays);
       document.getElementById('print-plan-summary').innerHTML = `
         全書共 <strong>${total}</strong> 頁/篇，預計 <strong>${days}</strong> 天完成（含 20% 緩衝期，實際排程 ${effectiveDays} 天，每日約 <strong>${perDay}</strong> 頁/篇）。<br/>
-        階段檢查點：□ 25%（約第 ${Math.round(total * 0.25)} 頁）　□ 50%（約第 ${Math.round(total * 0.5)} 頁）　□ 75%（約第 ${Math.round(total * 0.75)} 頁）
+        階段檢查點：□ 25%（約第 ${Math.round(total * 0.25)} 頁） □ 50%（約第 ${Math.round(total * 0.5)} 頁） □ 75%（約第 ${Math.round(total * 0.75)} 頁）
       `;
 
+      document.body.classList.remove('print-mode-notes');
+      document.body.classList.add('print-mode-guide');
       window.print();
+      document.body.classList.remove('print-mode-guide');
     }
 
-    // 三階段分頁切換
     function switchStage(stage) {
       ['pre', 'while', 'post'].forEach(s => {
         const tab = document.getElementById(`tab-${s}`);
@@ -1853,7 +2548,6 @@
       }
     }
 
-    // 自訂彩色索引貼
     function renderStickyTags() {
       const book = getCurrentBook();
       const editor = document.getElementById('sticky-tags-editor');
@@ -1915,7 +2609,6 @@
       copyTextToClipboard(prompt, '已複製「AI 設計索引貼分類」指令！');
     }
 
-    // 每日閱讀計畫
     function updatePlanAndSave() {
       const book = getCurrentBook();
       book.plan = {
@@ -1926,6 +2619,7 @@
       };
       saveState();
       calculateReadingPlan();
+      renderProgressBar();
     }
 
     function calculateReadingPlan() {
@@ -2019,6 +2713,23 @@
       showToast('已貼上彩色索引貼並存入本書筆記庫！');
     }
 
+    function setNoteFilter(tagId) { filterNoteTagId = tagId; renderNotesList(); }
+    function startEditNote(noteId) { editingNoteId = noteId; renderNotesList(); }
+    function cancelEditNote() { editingNoteId = null; renderNotesList(); }
+
+    function saveEditedNote(noteId) {
+      const book = getCurrentBook();
+      const note = book.notes.find(n => n.id === noteId);
+      if (!note) return;
+      note.page = document.getElementById(`edit-note-page-${noteId}`).value.trim() || '隨記';
+      note.quote = document.getElementById(`edit-note-quote-${noteId}`).value.trim();
+      note.thought = document.getElementById(`edit-note-thought-${noteId}`).value.trim();
+      editingNoteId = null;
+      saveState();
+      renderNotesList();
+      showToast('已更新索引貼內容！');
+    }
+
     function deleteReadingNote(id) {
       const book = getCurrentBook();
       book.notes = book.notes.filter(n => n.id !== id);
@@ -2029,15 +2740,55 @@
     function renderNotesList() {
       const book = getCurrentBook();
       const container = document.getElementById('notes-list-container');
+      const filterBar = document.getElementById('notes-filter-bar');
       document.getElementById('notes-count-badge').textContent = `已累積 ${book.notes.length} 則批注`;
 
-      if (book.notes.length === 0) {
-        container.innerHTML = `<div class="text-center py-8 text-xs text-muted-custom">本書目前還沒有索引貼紀錄，在閱讀時隨時記下觸動你的句子吧！</div>`;
+      filterBar.innerHTML = `
+        <span class="text-xs text-muted-custom">篩選分類：</span>
+        <button onclick="setNoteFilter('all')" class="px-2.5 py-1 rounded-full text-xs font-medium border transition-all ${filterNoteTagId === 'all' ? 'accent-bg border-transparent shadow-2xs' : 'border-custom text-muted-custom hover:opacity-80'}">
+          全部 (${book.notes.length})
+        </button>
+        ${book.tags.map(t => {
+          const count = book.notes.filter(n => n.tagId === t.id).length;
+          const active = filterNoteTagId === t.id;
+          return `
+            <button onclick="setNoteFilter('${t.id}')" class="px-2.5 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 border transition-all ${active ? 'ring-2 ring-offset-1 font-bold' : 'opacity-80 hover:opacity-100'}" style="border-color: ${t.color}; background-color: ${t.color}18;">
+              <span class="w-2 h-2 rounded-full" style="background-color: ${t.color};"></span>
+              <span>${t.name} (${count})</span>
+            </button>
+          `;
+        }).join('')}
+      `;
+
+      const filteredNotes = filterNoteTagId === 'all'
+        ? book.notes
+        : book.notes.filter(n => n.tagId === filterNoteTagId);
+
+      if (filteredNotes.length === 0) {
+        container.innerHTML = `<div class="text-center py-8 text-xs text-muted-custom">目前沒有符合此分類的索引貼紀錄喔！</div>`;
         return;
       }
 
-      container.innerHTML = book.notes.map(note => {
+      container.innerHTML = filteredNotes.map(note => {
         const tag = book.tags.find(t => t.id === note.tagId) || book.tags[0] || { color: '#D97757', name: '筆記' };
+
+        if (editingNoteId === note.id) {
+          return `
+            <div class="p-4 rounded-2xl border-2 accent-border space-y-2.5" style="border-left: 5px solid ${tag.color};">
+              <div class="flex items-center justify-between gap-2">
+                <span class="px-2 py-0.5 rounded-md text-xs font-bold" style="background-color: ${tag.color}22; color: ${tag.color};">${tag.name} (編輯中)</span>
+                <input id="edit-note-page-${note.id}" type="text" value="${note.page}" class="px-2.5 py-1 rounded-lg border border-custom text-xs bg-transparent w-32" />
+              </div>
+              <textarea id="edit-note-quote-${note.id}" rows="2" placeholder="書中原文..." class="w-full p-2 rounded-xl border border-custom text-xs bg-transparent">${note.quote || ''}</textarea>
+              <textarea id="edit-note-thought-${note.id}" rows="2" placeholder="個人批注..." class="w-full p-2 rounded-xl border border-custom text-sm bg-transparent">${note.thought || ''}</textarea>
+              <div class="flex justify-end gap-2">
+                <button onclick="cancelEditNote()" class="px-3 py-1 rounded-lg text-xs text-muted-custom">取消</button>
+                <button onclick="saveEditedNote('${note.id}')" class="px-3.5 py-1 rounded-lg accent-bg text-xs font-bold">儲存修改</button>
+              </div>
+            </div>
+          `;
+        }
+
         return `
           <div class="p-4 rounded-2xl border border-custom relative transition-all hover:shadow-2xs" style="border-left: 5px solid ${tag.color};">
             <div class="flex items-center justify-between gap-2 mb-2">
@@ -2046,7 +2797,10 @@
                 <span class="text-xs font-medium text-muted-custom">${note.page}</span>
                 <span class="text-[11px] text-muted-custom opacity-70">・${note.createdAt}</span>
               </div>
-              <button onclick="deleteReadingNote('${note.id}')" class="text-xs text-muted-custom hover:text-red-500">刪除</button>
+              <div class="flex items-center gap-2.5">
+                <button onclick="startEditNote('${note.id}')" class="text-xs text-muted-custom hover:accent-text">編輯</button>
+                <button onclick="deleteReadingNote('${note.id}')" class="text-xs text-muted-custom hover:text-red-500">刪除</button>
+              </div>
             </div>
             ${note.quote ? `<blockquote class="text-xs italic text-muted-custom border-l-2 border-custom pl-3 py-0.5 mb-2">「${note.quote}」</blockquote>` : ''}
             ${note.thought ? `<p class="text-sm leading-relaxed">${note.thought}</p>` : ''}
